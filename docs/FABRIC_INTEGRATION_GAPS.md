@@ -161,10 +161,43 @@ architecture, and Debug/Release variant without depending on SwiftPM's
 internal scratch layout. This is a build/distribution concern rather than a
 runtime Node API change.
 
+## 7. Plug-ins cannot request a wider canvas node
+
+**Observed constraint:** Fabric computes canvas-node dimensions in
+`Node.computeNodeSize()`. Horizontal ports affect height, while vertical ports
+affect width. A node with only horizontal ports therefore stays at the
+150-point minimum width regardless of its title or port-label lengths.
+`NodeView` uses that computed width, `NodeTitleView` clips an overlong title,
+and inlet/outlet labels occupy opposing stacks without a collision-avoidance
+layout. A plug-in has no public node-width override. The original M-LSD
+analysis labels visibly overlapped in the Editor even though their ports were
+valid and correctly registered.
+
+Host source: `Fabric/Graph/Node/Node.swift` (`nodeSize` and
+`computeNodeSize()`), `Fabric/Views/Nodes/NodeView.swift`,
+`Fabric/Views/Nodes/NodeTitleView.swift`, and
+`Fabric/Graph/GraphAutoLayout.swift` in the adjacent Fabric repository.
+
+**Local workaround:** The plug-in shortened its visible node titles and port
+labels (`M-LSD Analyze`, `Min Score`, `Lines`, `Scores`, `Frame`) while retaining
+stable Swift class names and port registry keys. Full meanings remain in port
+descriptions and documentation. This improves the current layout but limits
+how descriptive plug-in labels can be on the canvas.
+
+**Potential Fabric API direction:** Let a node declare a preferred or minimum
+canvas width, or let Fabric measure title and opposing port labels and choose
+a bounded content-aware width. Fabric should apply the resolved size
+consistently to `NodeView`, port anchors, selection, dragging, and graph
+auto-layout; it should also define truncation behavior when labels exceed the
+chosen maximum. This would let external plug-ins keep readable names without
+managing Fabric's layout themselves.
+
 ## Proposal priorities
 
 The highest-value changes are thread-safe invalidation and deterministic async
 export because they affect correctness for every GPU-to-CPU analysis plug-in.
 Custom value registration would most improve plug-in ergonomics and preserve
 atomic domain contracts. A general cadence API is useful but can follow the
-core asynchronous scheduling contract.
+core asynchronous scheduling contract. Configurable node width is a lower-risk
+editor ergonomics improvement that would benefit any plug-in with descriptive
+port labels.

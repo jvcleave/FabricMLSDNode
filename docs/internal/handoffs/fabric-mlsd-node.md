@@ -16,13 +16,15 @@ The resulting Fabric plug-in is explicitly self-contained: MESS is migration pro
 
 ## Selected Bounded Milestone
 
-Shorten the visible titles and port labels of both Fabric nodes after the user's screenshot showed collisions on the analysis node. Keep Swift node class names, port registry keys, types, order, defaults, and behavior unchanged. Use `M-LSD Analyze` and `M-LSD Overlay` as titles; use short labels such as `Min Score`, `Max Lines`, `Interval`, `Lines`, `Scores`, and `Frame`. Retain full meanings in descriptions and document the new direct-wiring labels.
+Record Fabric's non-configurable canvas node width in `docs/FABRIC_INTEGRATION_GAPS.md` as an upstream wishlist item. Cite the observed sizing/layout code, the M-LSD label-collision workaround, and a host API direction that keeps node dimensions and graph layout in sync.
 
-Definition of done: existing `.fabric` documents remain decodable by the same node class IDs and stable port registry keys; the shortened labels compile in the plug-in, the installed bundle passes signing checks, and no inference/rendering behavior changes. The user will assess the actual visual fit in Fabric Editor after restart.
+Definition of done: the document clearly separates the observed constraint, local workaround, and proposed Fabric capability; no Fabric or plug-in runtime source changes. Verify the documentation diff and commit/push with the user's standing authorization.
 
-Non-goals: changing Fabric's node layout, resizing Fabric-wide nodes, authoring `.fabric` scenes, or changing model/rendering behavior.
+Non-goals: implementing a Fabric layout change, revisiting the shortened labels, or authoring `.fabric` scenes.
 
 ## Milestone Status
+
+The node-width wishlist entry is drafted as section 7 of `docs/FABRIC_INTEGRATION_GAPS.md`. It records the 150-point default for all-horizontal-port nodes, the M-LSD label workaround, and a preferred/minimum or content-aware width API that would keep canvas layout consistent. Scoped documentation review and `git diff --check` pass. No source code or bundle changed; pending commit/push.
 
 Display-label stage: both node titles and visible port labels have been shortened; the registry keys, Swift class names, port types/order/defaults, and processing code are unchanged. Fabric's `PortHydrationSession` matches snapshots by registry key and restores UUIDs while leaving code-owned display names as declared; `PluginLoader` identifies these node classes by Swift class name. Existing saved connections should therefore survive the label update. The README now uses `Frame`/`Lines`/`Scores` for direct wiring. Release plug-in build, installation, strict deep signature verification, and `git diff --check` pass; no package test is needed for this reversible metadata-only change. Committed and pushed at `3087797`. Visual fit in the Editor remains for the user to assess after restart.
 
@@ -82,4 +84,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Await the user's visual check after restarting Fabric Editor. Confirm the labels fit and that their existing scene connections remain intact; if not, inspect the reported behavior before another bounded change. Do not author the user's `.fabric` scenes.
+Commit and push the verified wishlist entry. Then await the user's live visual check; do not author their `.fabric` scenes.
