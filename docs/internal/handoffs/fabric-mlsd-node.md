@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Latest documentation commit on `main`: `24b81f8` (`Map Fabric integration gaps to upstream issues`), pushed to `origin/main`
+- Latest documentation commit on `main`: `7aa92e5` (`Elaborate the Fabric plugin build gap`), pushed to `origin/main`
 - Latest sample commit on `main`: `c7a82b1` (`Add M-LSD geometry example`)
 - Latest implementation commit on `main`: `981c5a2` (`Add planar M-LSD positions node`)
 - Prior points/geometry planning checkpoint: `1d10ef7`
@@ -33,7 +33,7 @@ Geometry-example publication stage is complete, committed, and pushed at `c7a82b
 
 Fabric-issue coverage documentation is complete, committed, and pushed at `24b81f8`. The current open and closed Fabric issue tracker was reviewed on 2026-09-18. `docs/FABRIC_INTEGRATION_GAPS.md` maps all eight gaps to exact, partial, adjacent, or missing issue coverage: #247 is the consolidation point for async scheduling/invalidation/export, #308 partially covers plug-in builds, #296 is related to custom values, #155 and closed #336 are supporting context, and gaps 5, 7, and 8 have no direct issue. The document records when to expand an existing issue versus file a focused new one. `git diff --check` passed; this documentation-only stage required no build.
 
-Gap-6 elaboration is active. The integration-gap document now separates #308's resource-embedding concern from the broader external plug-in build contract, records the concrete compiler/configuration/module-map and scratch-path failure modes, and explains the current isolated native-build plus `dynamic_lookup` workaround. It adds acceptance criteria for a supported product/SDK, including one host-owned runtime/type identity, stable compile/link inputs, API-version diagnostics, clean CI builds, and an external plug-in fixture. It compares a source-based `FabricPluginAPI` surface with a versioned binary SDK. The user's current modification to `FabricScenes/MLSDGeoExample.fabric` is unrelated and must remain unstaged. This is documentation-only and requires no build.
+Gap-6 elaboration is complete, committed, and pushed at `7aa92e5`. The integration-gap document separates #308's resource-embedding concern from the broader external plug-in build contract, records the concrete compiler/configuration/module-map and scratch-path failure modes, and explains the current isolated native-build plus `dynamic_lookup` workaround. It adds acceptance criteria for a supported product/SDK, including one host-owned runtime/type identity, stable compile/link inputs, API-version diagnostics, clean CI builds, and an external plug-in fixture. It compares a source-based `FabricPluginAPI` surface with a versioned binary SDK. `git diff --check` passed; this documentation-only stage required no build. The user's current modification to `FabricScenes/MLSDGeoExample.fabric` remains unstaged.
 
 Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Committed and pushed at `a0d33a8`; no plug-in build was run because runtime source is untouched.
 
