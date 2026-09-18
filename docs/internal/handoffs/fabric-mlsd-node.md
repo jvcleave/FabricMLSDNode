@@ -2,8 +2,8 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Latest implementation commit on `main`: `3087797` (`Shorten M-LSD node display labels`)
-- Latest planning/documentation commit on `main`: `1199baa` (`Plan M-LSD points and geometry adapters`)
+- Latest implementation commit on `main`: `981c5a2` (`Add planar M-LSD positions node`), pushed to `origin/main`
+- Prior points/geometry planning checkpoint: `1d10ef7`
 
 ## Objective and Definition of Done
 
@@ -25,7 +25,7 @@ Definition of done: register and document the node, verify the Release bundle bu
 
 ## Milestone Status
 
-Planar positions adapter implementation and focused build are complete. `MLSDStructuralLinePositionsNode.swift` adds the typed `Lines`/`Size`/`Width` → `Positions` conversion with paired endpoints, aspect-preserving centered XY mapping, empty-array publication, and recoverable validation errors. The plug-in registration and README wiring/limitation notes are updated. Release `xcodebuild` passed and installed the bundle; strict deep signing, bundle metadata, and compiled node/port symbols verify. `git diff --check` passes. No scene or live geometry test was run; the built-in `Geometry Compose` source still skips empty position arrays. The user has an unrelated modification to `FabricScenes/MLSDExample.fabric`; leave that file untouched and exclude it from staging. The earlier points/geometry plan was recorded and pushed at `1199baa` with its checkpoint at `1d10ef7`.
+Planar positions adapter implementation and focused build are complete, committed and pushed at `981c5a2`. `MLSDStructuralLinePositionsNode.swift` adds the typed `Lines`/`Size`/`Width` → `Positions` conversion with paired endpoints, aspect-preserving centered XY mapping, empty-array publication, and recoverable validation errors. The plug-in registration and README wiring/limitation notes are updated. Release `xcodebuild` passed and installed the bundle; strict deep signing, bundle metadata, and compiled node/port symbols verify. `git diff --check` passed. No scene or live geometry test was run; the built-in `Geometry Compose` source still skips empty position arrays. This source-level host gap is now documented in `docs/FABRIC_INTEGRATION_GAPS.md` section 8 for a possible upstream fix. The user has an unrelated modification to `FabricScenes/MLSDExample.fabric`; leave that file untouched and exclude it from staging. The earlier points/geometry plan was recorded and pushed at `1199baa` with its checkpoint at `1d10ef7`.
 
 Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Committed and pushed at `a0d33a8`; no plug-in build was run because runtime source is untouched.
 
@@ -101,4 +101,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Review/commit/push only the node, registration, README, and handoff. Do not stage the user-modified scene. After this milestone is checkpointed, test `Geometry Compose` pairwise rendering and zero-line behavior in a live graph before deciding whether to add a dedicated geometry node. Live cadence and deterministic export remain separate checks.
+Checkpoint the section-8 Fabric gap and updated handoff, excluding the user-modified scene. The next bounded milestone is a user-authored live graph that verifies `Positions → Geometry Compose (Line) → Mesh` pairwise rendering and a nonempty → empty → nonempty transition. If the built-in node retains stale vertices, decide whether to propose the focused Fabric fix or implement a dedicated plug-in geometry node. Live cadence and deterministic export remain separate checks.

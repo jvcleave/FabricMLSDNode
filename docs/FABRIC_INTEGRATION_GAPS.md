@@ -192,6 +192,32 @@ auto-layout; it should also define truncation behavior when labels exceed the
 chosen maximum. This would let external plug-ins keep readable names without
 managing Fabric's layout themselves.
 
+## 8. Geometry Compose retains old vertices when Positions becomes empty
+
+**Observed constraint:** `PixelArrayToGeometryNode.evaluate()` calls
+`PointCloudGeometry.setData(...)` only when `inputPositions.value` is
+nonempty. If a connected producer changes from line endpoints to an empty
+array, the existing geometry retains its previous vertices. The M-LSD
+positions adapter correctly publishes an empty array for zero detections, but
+the built-in geometry path can continue drawing stale lines.
+
+Host source: `Fabric/Nodes/Geometry/PixelArrayToGeometryNode.swift` in the
+adjacent Fabric repository. This is a source-level finding; a live Editor
+zero-line transition has not yet been verified.
+
+**Local workaround:** Document `Positions → Geometry Compose (Line) → Mesh`
+as an initial geometry experiment, not a validated live zero-line solution.
+Keep zero-line publication explicit in the positions adapter. If the host
+behavior persists in a live graph, a dedicated plug-in geometry node can own
+and clear its stable geometry instance on empty input.
+
+**Potential Fabric API direction:** Have Geometry Compose treat an empty
+Positions array as a valid update and clear its vertex data, then force
+publication of the changed geometry even when the object identity is stable.
+Add a transition test covering nonempty → empty → nonempty arrays for Point
+and Line primitives. This is likely a host-node correctness fix rather than a
+new plug-in API.
+
 ## Proposal priorities
 
 The highest-value changes are thread-safe invalidation and deterministic async
@@ -200,4 +226,5 @@ Custom value registration would most improve plug-in ergonomics and preserve
 atomic domain contracts. A general cadence API is useful but can follow the
 core asynchronous scheduling contract. Configurable node width is a lower-risk
 editor ergonomics improvement that would benefit any plug-in with descriptive
-port labels.
+port labels. Geometry Compose's empty-array behavior is a focused correctness
+fix if confirmed in a live graph.
