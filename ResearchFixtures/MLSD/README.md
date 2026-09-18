@@ -13,10 +13,13 @@ also copied into the `MLSDStructuralLineKit` runtime target.
   selected segments, threshold counts, and Core ML CPU parity.
 - `Previews/city-28s-lines.png` visualizes the retained `0.05` city segments.
 - `Conversion/` contains the conversion and reference-generation scripts.
+- [`BUILDING_MODEL_VARIANTS.md`](../../BUILDING_MODEL_VARIANTS.md) documents the
+  complete variant conversion, validation, and runtime-integration workflow.
 
 The scripts require a separate research Python environment with TensorFlow
-2.12.0, Core ML Tools 9.0, OpenCV, NumPy, and Pillow. Runtime MESS code must not
-depend on Python, TensorFlow, or TFLite.
+2.12.0, Core ML Tools 9.0, OpenCV, NumPy, and Pillow. The runtime Swift package
+and Fabric plug-in must not depend on Python, TensorFlow, or TFLite. Exact
+research dependency pins are in `Conversion/requirements-model-conversion.txt`.
 
 `Sources/` contains the two city stills used by the pinned reference and the
 package's end-to-end analyzer test.

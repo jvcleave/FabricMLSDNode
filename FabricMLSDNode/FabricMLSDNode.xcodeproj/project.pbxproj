@@ -1,0 +1,615 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B0D100000000000000000005 /* MLSDStructuralLineKit in Frameworks */ = {isa = PBXBuildFile; productRef = B0D100000000000000000007 /* MLSDStructuralLineKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		035DF3B1304CC1940090D775 /* FabricMLSDNode.fabricplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FabricMLSDNode.fabricplugin; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B0D100000000000000000001 /* Exceptions for "FabricMLSDNode" folder in "FabricMLSDNode" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 035DF3B0304CC1940090D775 /* FabricMLSDNode */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B0D100000000000000000002 /* FabricMLSDNode */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B0D100000000000000000001 /* Exceptions for "FabricMLSDNode" folder in "FabricMLSDNode" target */,
+			);
+			path = FabricMLSDNode;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		035DF3AE304CC1940090D775 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0D100000000000000000005 /* MLSDStructuralLineKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		035DF3A8304CC1940090D775 = {
+			isa = PBXGroup;
+			children = (
+				B0D100000000000000000002 /* FabricMLSDNode */,
+				035DF3B2304CC1940090D775 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		035DF3B2304CC1940090D775 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				035DF3B1304CC1940090D775 /* FabricMLSDNode.fabricplugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		035DF3B0304CC1940090D775 /* FabricMLSDNode */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 035DF3B5304CC1940090D775 /* Build configuration list for PBXNativeTarget "FabricMLSDNode" */;
+			buildPhases = (
+				B0D100000000000000000003 /* Prepare Fabric API */,
+				035DF3AD304CC1940090D775 /* Sources */,
+				035DF3AE304CC1940090D775 /* Frameworks */,
+				035DF3AF304CC1940090D775 /* Resources */,
+				B0D100000000000000000004 /* Install Fabric Plugin */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B0D100000000000000000002 /* FabricMLSDNode */,
+			);
+			name = FabricMLSDNode;
+			packageProductDependencies = (
+				B0D100000000000000000007 /* MLSDStructuralLineKit */,
+			);
+			productName = FabricMLSDNode;
+			productReference = 035DF3B1304CC1940090D775 /* FabricMLSDNode.fabricplugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		035DF3A9304CC1940090D775 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					035DF3B0304CC1940090D775 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+				};
+			};
+			buildConfigurationList = 035DF3AC304CC1940090D775 /* Build configuration list for PBXProject "FabricMLSDNode" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 035DF3A8304CC1940090D775;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B0D100000000000000000006 /* XCLocalSwiftPackageReference ".." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 035DF3B2304CC1940090D775 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				035DF3B0304CC1940090D775 /* FabricMLSDNode */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		035DF3AF304CC1940090D775 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B0D100000000000000000003 /* Prepare Fabric API */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Prepare Fabric API";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "fabric_configuration=\"debug\"\nif [ \"$CONFIGURATION\" = \"Release\" ]; then\n    fabric_configuration=\"release\"\nfi\n\nfabric_source_root=\"${FABRIC_SOURCE_ROOT:-${PROJECT_DIR}/../../Fabric}\"\nfabric_scratch_path=\"${FABRIC_SPM_SCRATCH_PATH:-${PROJECT_DIR}/../.fabric-spm}\"\n/usr/bin/xcrun swift build --package-path \"$fabric_source_root\" --scratch-path \"$fabric_scratch_path\" --build-system native --configuration \"$fabric_configuration\"\n";
+		};
+		B0D100000000000000000004 /* Install Fabric Plugin */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Install Fabric Plugin";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$ACTION\" = \"build\" ]; then\n    plugin_destination=\"${USER_LIBRARY_DIR}/Application Support/Fabric/Plugins\"\n    installed_plugin=\"${plugin_destination}/${WRAPPER_NAME}\"\n    mkdir -p \"$plugin_destination\"\n    rm -rf \"$installed_plugin\"\n    ditto \"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\" \"$installed_plugin\"\n    /usr/bin/codesign --force --deep --sign - \"$installed_plugin\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		035DF3AD304CC1940090D775 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		035DF3B3304CC1940090D775 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 889HC48YMG;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		035DF3B4304CC1940090D775 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 889HC48YMG;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		035DF3B6304CC1940090D775 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 889HC48YMG;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FABRIC_SOURCE_ROOT = "$(PROJECT_DIR)/../../Fabric";
+				FABRIC_SPM_SCRATCH_PATH = "$(PROJECT_DIR)/../.fabric-spm";
+				FABRIC_SPM_BUILD_ROOT = "$(FABRIC_SPM_SCRATCH_PATH)/$(NATIVE_ARCH_ACTUAL)-apple-macosx/debug";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FABRIC_SPM_BUILD_ROOT)",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FabricMLSDNode/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-undefined",
+					dynamic_lookup,
+				);
+				OTHER_SWIFT_FLAGS = (
+					"$(inherited)",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/FabricCore.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SOURCE_ROOT)/Fabric/Nodes/Geometry/SuperShape",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/SatinCore.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SOURCE_ROOT)/Satin/Sources/SatinCore/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-numerics/Sources/_NumericsShims/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-numerics/Sources/_NumericsShims/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/mlx-swift/Source/Cmlx/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/mlx-swift/Source/Cmlx/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/yyjson.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/yyjson/src",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-atomics/Sources/_AtomicsShims/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-atomics/Sources/_AtomicsShims/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOWASI.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOWASI/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOWindows/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOWindows/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOLinux.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOLinux/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIODarwin.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIODarwin/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOFreeBSD.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOFreeBSD/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOOpenBSD.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOOpenBSD/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOAtomics.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOAtomics/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CocoaAsyncSocket.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/CocoaAsyncSocket/Source/GCD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jvclabs.FabricMLSDNode;
+				PRODUCT_MODULE_NAME = FabricMLSDNode;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_INCLUDE_PATHS = (
+					"$(inherited)",
+					"$(FABRIC_SPM_BUILD_ROOT)/Modules",
+					"$(FABRIC_SOURCE_ROOT)/Frameworks/Syphon.xcframework/macos-arm64_x86_64",
+					"$(FABRIC_SOURCE_ROOT)/Frameworks/HapInAVFoundation.xcframework/macos-arm64_x86_64",
+				);
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				WRAPPER_EXTENSION = fabricplugin;
+			};
+			name = Debug;
+		};
+		035DF3B7304CC1940090D775 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 889HC48YMG;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				FABRIC_SOURCE_ROOT = "$(PROJECT_DIR)/../../Fabric";
+				FABRIC_SPM_SCRATCH_PATH = "$(PROJECT_DIR)/../.fabric-spm";
+				FABRIC_SPM_BUILD_ROOT = "$(FABRIC_SPM_SCRATCH_PATH)/$(NATIVE_ARCH_ACTUAL)-apple-macosx/release";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FABRIC_SPM_BUILD_ROOT)",
+				);
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FabricMLSDNode/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-undefined",
+					dynamic_lookup,
+				);
+				OTHER_SWIFT_FLAGS = (
+					"$(inherited)",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/FabricCore.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SOURCE_ROOT)/Fabric/Nodes/Geometry/SuperShape",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/SatinCore.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SOURCE_ROOT)/Satin/Sources/SatinCore/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-numerics/Sources/_NumericsShims/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-numerics/Sources/_NumericsShims/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/mlx-swift/Source/Cmlx/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/mlx-swift/Source/Cmlx/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/yyjson.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/yyjson/src",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-atomics/Sources/_AtomicsShims/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-atomics/Sources/_AtomicsShims/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOWASI.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOWASI/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOWindows/include/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOWindows/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOLinux.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOLinux/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIODarwin.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIODarwin/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOFreeBSD.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOFreeBSD/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOOpenBSD.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOOpenBSD/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CNIOAtomics.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/swift-nio/Sources/CNIOAtomics/include",
+					-Xcc,
+					"-fmodule-map-file=$(FABRIC_SPM_BUILD_ROOT)/CocoaAsyncSocket.build/module.modulemap",
+					-Xcc,
+					-I,
+					-Xcc,
+					"$(FABRIC_SPM_SCRATCH_PATH)/checkouts/CocoaAsyncSocket/Source/GCD",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.jvclabs.FabricMLSDNode;
+				PRODUCT_MODULE_NAME = FabricMLSDNode;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_INCLUDE_PATHS = (
+					"$(inherited)",
+					"$(FABRIC_SPM_BUILD_ROOT)/Modules",
+					"$(FABRIC_SOURCE_ROOT)/Frameworks/Syphon.xcframework/macos-arm64_x86_64",
+					"$(FABRIC_SOURCE_ROOT)/Frameworks/HapInAVFoundation.xcframework/macos-arm64_x86_64",
+				);
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				WRAPPER_EXTENSION = fabricplugin;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		035DF3AC304CC1940090D775 /* Build configuration list for PBXProject "FabricMLSDNode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				035DF3B3304CC1940090D775 /* Debug */,
+				035DF3B4304CC1940090D775 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		035DF3B5304CC1940090D775 /* Build configuration list for PBXNativeTarget "FabricMLSDNode" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				035DF3B6304CC1940090D775 /* Debug */,
+				035DF3B7304CC1940090D775 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B0D100000000000000000006 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "..";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B0D100000000000000000007 /* MLSDStructuralLineKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MLSDStructuralLineKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 035DF3A9304CC1940090D775 /* Project object */;
+}

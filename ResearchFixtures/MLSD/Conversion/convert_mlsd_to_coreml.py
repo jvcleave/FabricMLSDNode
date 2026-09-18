@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
-"""Convert the pinned official M-LSD 512 tiny checkpoint to Core ML."""
+"""Convert a pinned official M-LSD checkpoint variant to Core ML."""
 
 import argparse
 import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-import coremltools as ct
-import tensorflow as tf
+from mlsd_variants import DEFAULT_VARIANT_NAME, variant_named, variant_names
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mlsd-repository", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument(
+        "--variant",
+        choices=variant_names(),
+        default=DEFAULT_VARIANT_NAME,
+        help="official checkpoint variant (default: %(default)s)",
+    )
     arguments = parser.parse_args()
+    variant = variant_named(arguments.variant)
+
+    import coremltools as ct  # pylint: disable=import-outside-toplevel
+    import tensorflow as tf  # pylint: disable=import-outside-toplevel
 
     repository = arguments.mlsd_repository.resolve()
     sys.path.insert(0, str(repository))
@@ -51,8 +60,8 @@ def main() -> None:
     models.BatchNormalization.call = inference_batch_normalization
 
     configuration = SimpleNamespace(
-        input_size=512,
-        backbone_type="MLSD",
+        input_size=variant.input_size,
+        backbone_type=variant.backbone_type,
         post_name="_extractor",
         out_channel=256,
         dilate=5,
@@ -62,7 +71,7 @@ def main() -> None:
         final_res2=False,
         residual_type=0,
         type_a_ksize=1,
-        map_size=256,
+        map_size=variant.map_size,
         topk=200,
         final_padding_same=True,
         batch_size=1,
@@ -74,7 +83,9 @@ def main() -> None:
         step=tf.Variable(0, name="step"),
         model=model,
     )
-    checkpoint_directory = repository / "ckpt_models" / "M-LSD_512_tiny"
+    checkpoint_directory = (
+        repository / "ckpt_models" / variant.checkpoint_directory_name
+    )
     manager = tf.train.CheckpointManager(
         checkpoint,
         str(checkpoint_directory),
@@ -82,7 +93,8 @@ def main() -> None:
     )
     if manager.latest_checkpoint is None:
         raise FileNotFoundError(
-            f"Missing M-LSD 512 tiny checkpoint under {checkpoint_directory}"
+            f"Missing {variant.upstream_name} checkpoint under "
+            f"{checkpoint_directory}"
         )
     status = checkpoint.restore(manager.latest_checkpoint)
     status.expect_partial()
@@ -91,12 +103,16 @@ def main() -> None:
     inference_model = tf.keras.Model(
         model.input,
         [model.output[-6], model.output[-5], model.output[-7]],
-        name="MLSD512TinyRGB",
+        name=variant.coreml_model_name,
     )
 
     @tf.function(
         input_signature=[
-            tf.TensorSpec([1, 512, 512, 3], tf.float32, name="image")
+            tf.TensorSpec(
+                [1, variant.input_size, variant.input_size, 3],
+                tf.float32,
+                name="image",
+            )
         ]
     )
     def infer(image):
@@ -114,7 +130,7 @@ def main() -> None:
         inputs=[
             ct.ImageType(
                 name="image",
-                shape=(1, 512, 512, 3),
+                shape=(1, variant.input_size, variant.input_size, 3),
                 color_layout=ct.colorlayout.RGB,
             )
         ],
@@ -126,18 +142,23 @@ def main() -> None:
     ct.utils.rename_feature(specification, "Identity_2", "displacement_map")
 
     converted = ct.models.MLModel(specification)
-    converted.author = "NAVER/LINE Vision; Core ML conversion for MESS"
+    converted.author = "NAVER/LINE Vision; Core ML conversion"
     converted.license = "Apache-2.0"
     converted.short_description = (
-        "M-LSD 512 tiny line-segment detector with in-graph top-200 selection."
+        f"{variant.upstream_name} line-segment detector with in-graph "
+        "top-200 selection."
     )
-    converted.input_description["image"] = "512 x 512 RGB image"
+    converted.input_description["image"] = (
+        f"{variant.input_size} x {variant.input_size} RGB image"
+    )
     converted.output_description["center_points"] = (
-        "Top-200 center coordinates in [y, x] order on the 256 x 256 map"
+        "Top-200 center coordinates in [y, x] order on the "
+        f"{variant.map_size} x {variant.map_size} map"
     )
     converted.output_description["center_scores"] = "Top-200 center confidences"
     converted.output_description["displacement_map"] = (
-        "Endpoint displacements [dx0, dy0, dx1, dy1] on the 256 x 256 map"
+        "Endpoint displacements [dx0, dy0, dx1, dy1] on the "
+        f"{variant.map_size} x {variant.map_size} map"
     )
 
     arguments.output.parent.mkdir(parents=True, exist_ok=True)

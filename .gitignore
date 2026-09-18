@@ -1,2 +1,9 @@
+.DS_Store
 .build/
+.fabric-spm/
+.venv-model-conversion/
 .swiftpm/
+__pycache__/
+DerivedData/
+xcuserdata/
+*.xcuserstate

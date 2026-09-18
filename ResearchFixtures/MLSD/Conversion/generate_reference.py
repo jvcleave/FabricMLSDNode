@@ -12,6 +12,8 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
+from mlsd_variants import DEFAULT_VARIANT_NAME, variant_named, variant_names
+
 
 THRESHOLDS = (0.01, 0.025, 0.05, 0.1, 0.2, 0.5)
 DISTANCE_THRESHOLD = 20.0
@@ -28,6 +30,7 @@ def extract_segments(
     source_width: int,
     source_height: int,
     score_threshold: float,
+    map_size: int,
 ):
     segments = []
     for point, score in zip(points, scores):
@@ -39,10 +42,10 @@ def extract_segments(
         if float(score) <= score_threshold or length <= DISTANCE_THRESHOLD:
             continue
         endpoints = [
-            2 * (x + float(displacement[0])) * source_width / 512,
-            2 * (y + float(displacement[1])) * source_height / 512,
-            2 * (x + float(displacement[2])) * source_width / 512,
-            2 * (y + float(displacement[3])) * source_height / 512,
+            (x + float(displacement[0])) * source_width / map_size,
+            (y + float(displacement[1])) * source_height / map_size,
+            (x + float(displacement[2])) * source_width / map_size,
+            (y + float(displacement[3])) * source_height / map_size,
         ]
         segments.append({
             "endpoints": [round(value, 6) for value in endpoints],
@@ -59,7 +62,14 @@ def main() -> None:
     parser.add_argument("--sky", required=True, type=Path)
     parser.add_argument("--reference-output", required=True, type=Path)
     parser.add_argument("--preview-output", required=True, type=Path)
+    parser.add_argument(
+        "--variant",
+        choices=variant_names(),
+        default=DEFAULT_VARIANT_NAME,
+        help="official model variant (default: %(default)s)",
+    )
     arguments = parser.parse_args()
+    variant = variant_named(arguments.variant)
 
     interpreter = tf.lite.Interpreter(
         model_path=str(arguments.tflite),
@@ -68,6 +78,32 @@ def main() -> None:
     interpreter.allocate_tensors()
     input_details = interpreter.get_input_details()[0]
     output_details = interpreter.get_output_details()
+    expected_tflite_input_shape = [
+        1,
+        variant.input_size,
+        variant.input_size,
+        4,
+    ]
+    if input_details["shape"].tolist() != expected_tflite_input_shape:
+        raise ValueError(
+            f"{variant.upstream_name} expected TFLite input shape "
+            f"{expected_tflite_input_shape}, got "
+            f"{input_details['shape'].tolist()}"
+        )
+    expected_tflite_output_shapes = [
+        [1, 200, 2],
+        [1, 200],
+        [1, variant.map_size, variant.map_size, 4],
+    ]
+    actual_tflite_output_shapes = [
+        details["shape"].tolist() for details in output_details
+    ]
+    if actual_tflite_output_shapes != expected_tflite_output_shapes:
+        raise ValueError(
+            f"{variant.upstream_name} expected TFLite output shapes "
+            f"{expected_tflite_output_shapes}, got "
+            f"{actual_tflite_output_shapes}"
+        )
     coreml_model = ct.models.MLModel(
         str(arguments.coreml),
         compute_units=ct.ComputeUnit.CPU_ONLY,
@@ -83,10 +119,13 @@ def main() -> None:
         source_height, source_width = source_bgr.shape[:2]
         resized_rgb = cv2.resize(
             source_bgr[:, :, ::-1],
-            (512, 512),
+            (variant.input_size, variant.input_size),
             interpolation=cv2.INTER_AREA,
         )
-        alpha = np.ones((512, 512, 1), dtype=resized_rgb.dtype)
+        alpha = np.ones(
+            (variant.input_size, variant.input_size, 1),
+            dtype=resized_rgb.dtype,
+        )
         tflite_input = np.concatenate([resized_rgb, alpha], axis=-1)
         tflite_input = np.expand_dims(tflite_input, 0).astype(np.float32)
         interpreter.set_tensor(input_details["index"], tflite_input)
@@ -119,6 +158,7 @@ def main() -> None:
                 source_width,
                 source_height,
                 threshold,
+                variant.map_size,
             ))
             coreml_counts[key] = len(extract_segments(
                 coreml_points,
@@ -127,6 +167,7 @@ def main() -> None:
                 source_width,
                 source_height,
                 threshold,
+                variant.map_size,
             ))
 
         selected_segments = extract_segments(
@@ -136,6 +177,7 @@ def main() -> None:
             source_width,
             source_height,
             0.05,
+            variant.map_size,
         )
         fixtures[fixture_path.name] = {
             "source_size": [source_width, source_height],
@@ -168,9 +210,12 @@ def main() -> None:
 
     reference = {
         "schema_version": 1,
-        "model": "M-LSD_512_tiny",
-        "input": "512 x 512 raw RGB values in [0, 255]",
-        "map_size": [256, 256],
+        "model": variant.upstream_name,
+        "input": (
+            f"{variant.input_size} x {variant.input_size} raw RGB values "
+            "in [0, 255]"
+        ),
+        "map_size": [variant.map_size, variant.map_size],
         "maximum_candidates": 200,
         "center_order": ["y", "x"],
         "displacement_order": ["dx0", "dy0", "dx1", "dy1"],
