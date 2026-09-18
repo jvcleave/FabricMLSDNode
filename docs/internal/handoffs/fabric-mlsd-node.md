@@ -3,7 +3,7 @@
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Latest implementation commit on `main`: `3087797` (`Shorten M-LSD node display labels`)
-- Latest documentation commit on `main`: `979a260` (`Document Fabric node width API gap`)
+- Latest documentation commit on `main`: `ed2054a` (`Show M-LSD Fabric example in README`)
 
 ## Objective and Definition of Done
 
@@ -25,7 +25,7 @@ Non-goals: editing the screenshot, changing the scene, committing the source pho
 
 ## Milestone Status
 
-README screenshot stage: `FabricScenes/MLSDExample.jpg` was inspected visually; it shows the user-authored Image Provider → analysis → overlay → Image Mesh chain and visible city-line output in Fabric Editor. README now embeds it by a verified relative path. `git diff --check` passes. The screenshot bytes are unchanged; the user's `.fabric` scene and source JPEG remain untracked and untouched. Pending commit/push. A still screenshot is evidence of rendering, not cadence or deterministic-export validation.
+README screenshot stage: `FabricScenes/MLSDExample.jpg` was inspected visually; it shows the user-authored Image Provider → analysis → overlay → Image Mesh chain and visible city-line output in Fabric Editor. README embeds it by a verified relative path. `git diff --check` passed. The screenshot bytes are unchanged; the user's `.fabric` scene and source JPEG remain untracked and untouched. Committed and pushed at `ed2054a`. A still screenshot is evidence of rendering, not cadence or deterministic-export validation.
 
 The node-width wishlist entry is section 7 of `docs/FABRIC_INTEGRATION_GAPS.md`. It records the 150-point default for all-horizontal-port nodes, the M-LSD label workaround, and a preferred/minimum or content-aware width API that would keep canvas layout consistent. Scoped documentation review and `git diff --check` pass. No source code or bundle changed. Committed and pushed at `979a260`.
 
@@ -87,4 +87,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Add the user-supplied screenshot to the README, verify its relative path and the scoped diff, then commit/push README, screenshot, and handoff only. Preserve the untracked scene and source photo.
+Await user direction on whether to publish the untracked `.fabric` scene and source photo as the reproducible sample. Preserve those files until explicitly included in scope. Live cadence and deterministic export remain separate checks.
