@@ -12,8 +12,9 @@ the decoder clamps endpoints at that public contract boundary. Host
 applications own scheduling and rendering. The package has no dependency on
 Fabric, Satin, MESS, MessScene, Python, TensorFlow, or TFLite at runtime.
 
-The Fabric plug-in provides two nodes: an analysis node that publishes typed
-segment data and a separate overlay node that renders those segments.
+The Fabric plug-in provides three nodes: an analysis node that publishes typed
+segment data, a separate overlay node that renders those segments, and a
+positions node that places them on a flat XY plane.
 User-authored sample `.fabric` scenes will demonstrate both the
 direct overlay path and independent use of the analysis outputs. See
 [`docs/internal/handoffs/fabric-mlsd-node.md`](docs/internal/handoffs/fabric-mlsd-node.md)
@@ -126,6 +127,30 @@ The offscreen Metal shader fixture can be run against an installed bundle with:
 swift scripts/verify_overlay_shader.swift \
   "$HOME/Library/Application Support/Fabric/Plugins/FabricMLSDNode.fabricplugin"
 ```
+
+## Positions node contract
+
+`M-LSD Positions` converts analysis `Lines` and `Size` into a typed
+`Array<Vector3>` named `Positions`. Connect both analysis outlets to the
+matching inlets. Every line contributes two consecutive positions (start,
+end), with no endpoint merging or shared-junction inference. The node does
+not filter by score; use analysis `Min Score` and `Max Lines` to select lines.
+
+`Width` (default 1 world unit) controls the width of a centered XY plane at
+`z = 0`. The height follows the analyzed image's presentation aspect ratio.
+Normalized bottom-left `(0, 0)` maps to the plane's lower-left corner and
+`(1, 1)` to its upper-right corner. With Image Mesh set to `Size = Width` and
+`Sizing Dimension = Width`, both occupy the same plane before object
+transforms. The positions are planar placements, not recovered 3D depth.
+
+For an initial geometry experiment, connect `Positions` to Fabric's
+`Geometry Compose`, set its `Primitive` to `Line`, then connect its `Geometry`
+to a `Mesh` with a material. The ordered pairs form independent line
+segments. Fabric's current `Geometry Compose` only replaces its vertex data
+when Positions is nonempty; when detections drop to zero, it may continue
+showing the previous lines. This built-in path is therefore not yet verified
+for live zero-line transitions. A dedicated geometry node remains a separate
+milestone if that host limitation prevents a correct live graph.
 
 ## Samples
 
