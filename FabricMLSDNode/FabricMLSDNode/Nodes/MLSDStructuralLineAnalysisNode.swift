@@ -100,6 +100,14 @@ public final class MLSDStructuralLineAnalysisNode: Node
                     description: "Presentation width and height of the analyzed image"
                 )
             ),
+            (
+                "outputAnalyzedImage",
+                NodePort<FabricImage>(
+                    name: "Analyzed Image",
+                    kind: .Outlet,
+                    description: "The image paired with the completed Line Segments result"
+                )
+            ),
         ]
     }
 
@@ -111,6 +119,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
     public var outputConfidences: NodePort<ContiguousArray<Float>> { port(named: "outputConfidences") }
     public var outputLineCount: NodePort<Int> { port(named: "outputLineCount") }
     public var outputSourceSize: NodePort<SIMD2<Float>> { port(named: "outputSourceSize") }
+    public var outputAnalyzedImage: NodePort<FabricImage> { port(named: "outputAnalyzedImage") }
 
     private struct AnalysisRequest
     {
@@ -123,7 +132,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
 
     private enum CompletedAnalysis
     {
-        case success(requestIdentifier: UInt64, frame: StructuralLineFrame)
+        case success(requestIdentifier: UInt64, frame: StructuralLineFrame, image: FabricImage)
         case failure(requestIdentifier: UInt64, message: String)
     }
 
@@ -294,7 +303,8 @@ public final class MLSDStructuralLineAnalysisNode: Node
                         self?.completeAnalysis(
                             .success(
                                 requestIdentifier: request.identifier,
-                                frame: frame
+                                frame: frame,
+                                image: request.image
                             ),
                             lifecycleGeneration: generation
                         )
@@ -333,12 +343,12 @@ public final class MLSDStructuralLineAnalysisNode: Node
 
         switch completedAnalysis
         {
-            case let .success(requestIdentifier, frame):
+            case let .success(requestIdentifier, frame, image):
                 guard requestIdentifier >= self.minimumAcceptedRequestIdentifier else
                 {
                     return nil
                 }
-                self.publish(frame: frame)
+                self.publish(frame: frame, image: image)
                 return nil
             case let .failure(requestIdentifier, message):
                 guard requestIdentifier >= self.minimumAcceptedRequestIdentifier else
@@ -350,7 +360,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
         }
     }
 
-    private func publish(frame: StructuralLineFrame)
+    private func publish(frame: StructuralLineFrame, image: FabricImage)
     {
         var segments = ContiguousArray<SIMD4<Float>>()
         var confidences = ContiguousArray<Float>()
@@ -372,6 +382,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
             Float(frame.sourceSize.width),
             Float(frame.sourceSize.height)
         ))
+        self.outputAnalyzedImage.send(image)
     }
 
     private func publishEmptyState()
@@ -380,6 +391,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
         self.outputConfidences.send(ContiguousArray<Float>())
         self.outputLineCount.send(0)
         self.outputSourceSize.send(.zero)
+        self.outputAnalyzedImage.send(nil)
     }
 
     private func resetSchedulingState()

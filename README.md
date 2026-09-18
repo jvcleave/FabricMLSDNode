@@ -12,9 +12,9 @@ the decoder clamps endpoints at that public contract boundary. Host
 applications own scheduling and rendering. The package has no dependency on
 Fabric, Satin, MESS, MessScene, Python, TensorFlow, or TFLite at runtime.
 
-The Fabric plug-in is being developed as two nodes: an analysis node that
-publishes typed segment data and a separate overlay node that renders those
-segments. User-authored sample `.fabric` scenes will demonstrate both the
+The Fabric plug-in provides two nodes: an analysis node that publishes typed
+segment data and a separate overlay node that renders those segments.
+User-authored sample `.fabric` scenes will demonstrate both the
 direct overlay path and independent use of the analysis outputs. See
 [`docs/internal/handoffs/fabric-mlsd-node.md`](docs/internal/handoffs/fabric-mlsd-node.md)
 for current milestone status.
@@ -73,7 +73,7 @@ adjacent checkout's existing `.build` cache.
 
 ## Analysis node contract
 
-The plug-in currently registers `M-LSD Structural Line Analysis`. It accepts a
+The plug-in registers `M-LSD Structural Line Analysis`. It accepts a
 Fabric image plus minimum confidence, maximum line count, and analysis interval
 parameters. It publishes:
 
@@ -82,6 +82,7 @@ parameters. It publishes:
 - `Line Confidences`: an index-aligned `Array<Float>`.
 - `Line Count`: the number of completed segments.
 - `Source Size`: the analyzed image's presentation width and height.
+- `Analyzed Image`: the source image paired with those completed segments.
 
 The node encodes orientation-aware preprocessing into Fabric's current command
 buffer, then performs Core ML inference asynchronously after GPU completion.
@@ -90,7 +91,33 @@ image. Outputs therefore represent the latest completed interactive analysis;
 Fabric currently has no same-frame asynchronous barrier for deterministic
 export. That limitation is detailed in the integration-gaps document above.
 
-The separate overlay node remains the next implementation milestone.
+## Overlay node contract
+
+`M-LSD Structural Line Overlay` accepts an `Image`, `Line Segments` in the
+analysis node's normalized bottom-left `Array<Vector4>` format, and optional
+index-aligned `Line Confidences` (`Array<Float>`). Connect the analysis node's
+two array outlets to the identically named overlay inlets. The overlay works
+with any compatible segment producer; it does not run inference.
+
+For frame-aligned interactive results, connect `Analyzed Image` to the overlay's
+`Image` inlet. Connecting the current upstream image instead is possible, but
+its content can be newer than the asynchronously completed line arrays.
+
+The overlay has line color, width in presentation pixels, opacity, and minimum
+confidence controls. If confidences are omitted, every line is treated as
+confidence 1. It accepts at most 200 lines with finite normalized endpoints;
+if confidences are connected, their count must match. Invalid arrays produce
+a recoverable Fabric execution error. With no visible lines it passes the
+source image through. Otherwise it copies the stored image, draws anti-aliased
+lines in presentation space, and preserves the source image's Fabric texture
+transform on the output. Its output is an RGBA16-float `Image`.
+
+The offscreen Metal shader fixture can be run against an installed bundle with:
+
+```sh
+swift scripts/verify_overlay_shader.swift \
+  "$HOME/Library/Application Support/Fabric/Plugins/FabricMLSDNode.fabricplugin"
+```
 
 ## Samples
 

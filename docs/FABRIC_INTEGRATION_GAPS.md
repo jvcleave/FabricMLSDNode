@@ -26,6 +26,8 @@ into Fabric's existing typed values:
 - `ContiguousArray<Float>` for index-aligned confidence values.
 - `Int` for line count.
 - `SIMD2<Float>` for presentation source size.
+- `FabricImage` for the image paired with the completed result, avoiding a
+  mismatch with newer upstream frames during interactive overlay rendering.
 
 This remains typed and serializable, but Fabric cannot express that both arrays
 belong to one atomic frame or enforce equal counts at a connection boundary.

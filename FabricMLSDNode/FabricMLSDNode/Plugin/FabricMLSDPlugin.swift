@@ -16,6 +16,6 @@ public final class FabricMLSDPlugin: NSObject, FabricPlugin
 
     public static func additionalNodeClasses() -> [Node.Type]
     {
-        [MLSDStructuralLineAnalysisNode.self]
+        [MLSDStructuralLineAnalysisNode.self, MLSDStructuralLineOverlayNode.self]
     }
 }
