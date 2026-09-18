@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Branch and HEAD: `main` at `3b6b24c` (`Add standalone M-LSD structural line package`)
+- Branch and HEAD: `main` at `53c8467` (`Add Fabric plugin scaffold and model variant workflow`)
 
 ## Objective and Definition of Done
 
@@ -10,7 +10,7 @@ Create a standalone Fabric plug-in repository that owns one canonical reusable M
 
 ## Current Repository State
 
-The package-migration milestone is committed and pushed on `main` at `3b6b24c`. The working tree now contains the completed plug-in scaffold and model-variant documentation/tooling milestones plus the handoff updates that record them. The verified package tree was copied from `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/MESS/MessStructuralLineKit` and renamed to `MLSDStructuralLineKit`; the original MESS checkout was not modified. The package manifest uses Swift tools 5.9 and macOS 15. Source identity and the pinned model and license hashes match the verified source. MESS has unrelated dirty submodule pointers for `MessApp/MessApp` and `MessSceneApp/MessSceneApp`; Fabric has unrelated project-file, package-resolution, and `Lygia/` changes. Those existing changes must remain untouched.
+The package-migration milestone is committed and pushed on `main` at `3b6b24c`. The completed plug-in scaffold and model-variant documentation/tooling milestones are committed and pushed at `53c8467`. The verified package tree was copied from `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/MESS/MessStructuralLineKit` and renamed to `MLSDStructuralLineKit`; the original MESS checkout was not modified. The package manifest uses Swift tools 5.9 and macOS 15. Source identity and the pinned model and license hashes match the verified source. MESS has unrelated dirty submodule pointers for `MessApp/MessApp` and `MessSceneApp/MessSceneApp`; Fabric has unrelated project-file, package-resolution, and `Lygia/` changes. Those existing changes must remain untouched.
 
 The resulting Fabric plug-in is explicitly self-contained: MESS is migration provenance only, not a build-time or runtime dependency. This repository must not import, link, reference, or require any MESS-owned target. Any later MESS adoption points from MESS to this package, never from this repository back to MESS.
 
@@ -24,7 +24,7 @@ Non-goals for this milestone: shipping a second production model, claiming runti
 
 ## Milestone Status
 
-Complete and verified. The completed plug-in scaffold and this documentation/tooling milestone remain uncommitted. `BUILDING_MODEL_VARIANTS.md`, pinned research dependencies, shared variant configuration, converter selection, reference-generator selection and shape validation, and focused Python tests are implemented. The pinned upstream checkout was inspected at the exact recorded commit. Its 320-tiny README example incorrectly says 512/256; direct inspection of all eight shipped TFLite artifacts confirms both 320 families use a 320 input and 160 map, while both 512 families use a 512 input and 256 map.
+Complete, verified, committed, and pushed at `53c8467`. `BUILDING_MODEL_VARIANTS.md`, pinned research dependencies, shared variant configuration, converter selection, reference-generator selection and shape validation, and focused Python tests are implemented. The pinned upstream checkout was inspected at the exact recorded commit. Its 320-tiny README example incorrectly says 512/256; direct inspection of all eight shipped TFLite artifacts confirms both 320 families use a 320 input and 160 map, while both 512 families use a 512 input and 256 map.
 
 ## Relevant Files
 
@@ -71,4 +71,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Review the completed plug-in scaffold and model-variant documentation/tooling changes and obtain explicit authorization before committing or pushing them. The next bounded milestone is the analysis-node architecture and Fabric API boundary, including a safe asynchronous invalidation path and correct handling of `FabricImage.textureTransform`; do not begin the overlay node or sample scenes in that milestone.
+Define the analysis-node architecture and Fabric API boundary as the next bounded milestone, including a safe asynchronous invalidation path and correct handling of `FabricImage.textureTransform`. Inspect the current Fabric image-node, typed-port, execution, serialization, and plugin-node patterns before implementation. Do not begin the overlay node or sample scenes in that milestone.
