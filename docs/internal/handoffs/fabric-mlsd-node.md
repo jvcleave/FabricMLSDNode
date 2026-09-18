@@ -7,7 +7,7 @@
 
 ## Objective and Definition of Done
 
-Create a standalone Fabric plug-in repository that owns one canonical reusable M-LSD structural-line package plus two Fabric nodes: an analysis node that outputs typed segment data and a separate overlay node that renders those segments. Support focused, user-authored sample content comparable to the samples in `FabricBodyMeshProvider` and `FabricScenes` so plug-in integration and intended node composition are demonstrable. Preserve the verified 512-tiny Core ML behavior, provenance, licensing, and focused reference verification. Include reproducible documentation for developers who want to convert, package, and validate another upstream M-LSD variant.
+Create a standalone Fabric plug-in repository that owns one canonical reusable M-LSD structural-line package plus separate analysis, overlay, and planar-positions Fabric nodes. Support focused, user-authored sample content comparable to the samples in `FabricBodyMeshProvider` and `FabricScenes` so plug-in integration and intended node composition are demonstrable. Preserve the verified 512-tiny Core ML behavior, provenance, licensing, and focused reference verification. Include reproducible documentation for developers who want to convert, package, and validate another upstream M-LSD variant.
 
 ## Current Repository State
 
@@ -26,6 +26,8 @@ Definition of done: register and document the node, verify the Release bundle bu
 ## Milestone Status
 
 Planar positions adapter implementation and focused build are complete, committed and pushed at `981c5a2`. `MLSDStructuralLinePositionsNode.swift` adds the typed `Lines`/`Size`/`Width` → `Positions` conversion with paired endpoints, aspect-preserving centered XY mapping, empty-array publication, and recoverable validation errors. The plug-in registration and README wiring/limitation notes are updated. Release `xcodebuild` passed and installed the bundle; strict deep signing, bundle metadata, and compiled node/port symbols verify. `git diff --check` passed. No scene or live geometry test was run; the built-in `Geometry Compose` source still skips empty position arrays. This source-level host gap is now documented in `docs/FABRIC_INTEGRATION_GAPS.md` section 8 for a possible upstream fix. The user has an unrelated modification to `FabricScenes/MLSDExample.fabric`; leave that file untouched and exclude it from staging. The earlier points/geometry plan was recorded and pushed at `1199baa` with its checkpoint at `1d10ef7`.
+
+Geometry-example publication stage is complete and awaiting its commit. The user-authored `FabricScenes/MLSDGeoExample.fabric` parses as JSON, declares the plug-in plus Fabric Core Nodes, connects Image Provider → analysis, both `Lines` and `Size` → positions, positions → Geometry Compose, and geometry/material → Mesh through six active connections. Geometry Compose serializes `Primitive = Line`. `MLSDGeoExample.jpg` visually shows the graph and rendered line output; it is 4888×2000 and has no indexed author, download-source, or GPS metadata. The scene contains a disconnected Movie Provider with an external authoring path; it is not part of the execution chain. README and `FabricScenes/README.md` document the complete wiring, required Size connection, Primitive setting, included image relink, and still-unverified zero-line transition. `git diff --check` and focused JSON/connection/asset checks pass. This documentation/sample stage does not require a plug-in rebuild.
 
 Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Committed and pushed at `a0d33a8`; no plug-in build was run because runtime source is untouched.
 
@@ -94,11 +96,11 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Unresolved Concerns
 
-- The user-authored screenshot shows line rendering in Fabric Editor; live cadence and deterministic export have not been validated from that still capture.
+- The user-authored screenshots show overlay and geometry rendering in Fabric Editor; live cadence, geometry's zero-line transition, and deterministic export have not been validated from still captures.
 - Fabric has no same-frame barrier for asynchronous GPU-to-CPU analysis during deterministic export. The first node will explicitly support bounded latest-frame interactive analysis; the limitation and possible host APIs are recorded in `docs/FABRIC_INTEGRATION_GAPS.md`.
 - The later MESS migration must be handled as a separate cross-repository milestone.
-- The user-authored `FabricScenes/MLSDExample.fabric` and `FabricScenes/DubaiTestImage.jpg` are being published as the direct-overlay sample. Fabric's absolute file URL requires one-time relinking on another machine. A separate independent-analysis sample may be added later; Codex should not create a placeholder.
+- The user-authored overlay and geometry scenes share `FabricScenes/DubaiTestImage.jpg`. Fabric's absolute file URL requires one-time relinking on another machine.
 
 ## Next Exact Action
 
-Checkpoint the section-8 Fabric gap and updated handoff, excluding the user-modified scene. The next bounded milestone is a user-authored live graph that verifies `Positions → Geometry Compose (Line) → Mesh` pairwise rendering and a nonempty → empty → nonempty transition. If the built-in node retains stale vertices, decide whether to propose the focused Fabric fix or implement a dedicated plug-in geometry node. Live cadence and deterministic export remain separate checks.
+Commit and push the geometry scene, screenshot, README changes, and handoff without rebuilding unchanged plug-in code. After that checkpoint, the next bounded milestone is a nonempty → empty → nonempty live transition. If Geometry Compose retains stale vertices, decide whether to propose the focused Fabric fix or implement a dedicated plug-in geometry node. Live cadence and deterministic export remain separate checks.

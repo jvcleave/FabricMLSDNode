@@ -24,7 +24,7 @@ Current Fabric constraints, the plug-in's local adaptations, and candidate
 host API improvements are tracked in
 [`docs/FABRIC_INTEGRATION_GAPS.md`](docs/FABRIC_INTEGRATION_GAPS.md).
 
-## Example
+## Overlay example
 
 The user-authored [MLSDExample.fabric](FabricScenes/MLSDExample.fabric) scene
 connects an Image Provider to `M-LSD Analyze`,
@@ -32,6 +32,28 @@ passes its `Frame`, `Lines`, and `Scores` to `M-LSD Overlay`, and displays the
 result with Image Mesh.
 
 ![M-LSD structural lines over a Dubai city image in Fabric Editor](FabricScenes/MLSDExample.jpg)
+
+## Geometry example
+
+The user-authored [MLSDGeoExample.fabric](FabricScenes/MLSDGeoExample.fabric)
+scene converts the same analysis into renderable line geometry. Its essential
+wiring is:
+
+```text
+Image Provider: Image → M-LSD Analyze: Image
+M-LSD Analyze: Lines → M-LSD Positions: Lines
+M-LSD Analyze: Size → M-LSD Positions: Size
+M-LSD Positions: Positions → Geometry Compose: Positions
+Geometry Compose: Geometry → Mesh: Geometry
+Color Material: Material → Mesh: Material
+```
+
+Set `Geometry Compose` to `Primitive = Line`. The `Size` connection is
+required for nonempty lines because it preserves the analyzed image's aspect
+ratio; omitting it produces a recoverable validation error. The included
+scene uses the bundled `DubaiTestImage.jpg` through Image Provider.
+
+![M-LSD positions rendered as line geometry in Fabric Editor](FabricScenes/MLSDGeoExample.jpg)
 
 ## Development layout
 
@@ -146,23 +168,22 @@ transforms. The positions are planar placements, not recovered 3D depth.
 For an initial geometry experiment, connect `Positions` to Fabric's
 `Geometry Compose`, set its `Primitive` to `Line`, then connect its `Geometry`
 to a `Mesh` with a material. The ordered pairs form independent line
-segments. Fabric's current `Geometry Compose` only replaces its vertex data
+segments. The included geometry example demonstrates this path. Fabric's
+current `Geometry Compose` only replaces its vertex data
 when Positions is nonempty; when detections drop to zero, it may continue
-showing the previous lines. This built-in path is therefore not yet verified
-for live zero-line transitions. A dedicated geometry node remains a separate
+showing the previous lines. The nonempty → empty transition has not yet been
+verified in the live example. A dedicated geometry node remains a separate
 milestone if that host limitation prevents a correct live graph.
 
 ## Samples
 
-[`FabricScenes/`](FabricScenes/) includes the example scene, its
-[`DubaiTestImage.jpg`](FabricScenes/DubaiTestImage.jpg) source image, and the
-screenshot above. After cloning, open the scene in Fabric Editor and use Image
-Provider's `File Path` picker to reselect the included JPEG, then save the
-scene. Fabric currently stores that path as an absolute file URL, so the saved
-path from the author's machine will not resolve on another machine.
-
-The example demonstrates the direct overlay path. A separate sample for
-independent use of the analysis outputs may be added later.
+[`FabricScenes/`](FabricScenes/) includes direct-overlay and geometry scenes,
+their screenshots, and the shared
+[`DubaiTestImage.jpg`](FabricScenes/DubaiTestImage.jpg) source image. After
+cloning, open either scene in Fabric Editor and use Image Provider's `File
+Path` picker to reselect the included JPEG, then save the scene. Fabric
+currently stores that path as an absolute file URL, so the author's saved path
+will not resolve on another machine.
 
 See [ResearchFixtures/MLSD/PROVENANCE.md](ResearchFixtures/MLSD/PROVENANCE.md)
 for model source and license pins, conversion, independent reference fixtures,
