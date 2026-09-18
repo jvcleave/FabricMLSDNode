@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Branch and HEAD: `main` at `49e5e73` (`Record completed plugin scaffold milestone`)
+- Branch and HEAD: `main` at `b6df802` (`Add asynchronous M-LSD analysis node and Fabric API gap notes`)
 
 ## Objective and Definition of Done
 
@@ -26,7 +26,7 @@ Non-goals for this milestone: overlay rendering, custom Fabric-wide port types, 
 
 ## Milestone Status
 
-Complete and verified; pending authorized commit. Architecture inspection confirmed that Fabric's `PortType` and `PortValue` are closed enums, while `ContiguousArray<SIMD4<Float>>` and `ContiguousArray<Float>` are already supported typed values. A self-contained plug-in therefore cannot introduce a first-class `StructuralLineFrame` port without changing Fabric; the selected parallel-array contract preserves type safety and avoids that cross-repository change.
+Complete, verified, and committed at `b6df802`; pending push. Architecture inspection confirmed that Fabric's `PortType` and `PortValue` are closed enums, while `ContiguousArray<SIMD4<Float>>` and `ContiguousArray<Float>` are already supported typed values. A self-contained plug-in therefore cannot introduce a first-class `StructuralLineFrame` port without changing Fabric; the selected parallel-array contract preserves type safety and avoids that cross-repository change.
 
 Fabric supplies one uncommitted command buffer for an execution pass. Starting a separate preprocessing command buffer from `execute()` could race upstream image production, so preprocessing will be encoded after upstream work on the supplied buffer. Core ML prediction begins only in its completion handler. Fabric's `markDirty()` is not documented as thread-safe; completion publication will therefore be staged through `Task { @MainActor in ... }`, consistent with Fabric's existing asynchronous node state transitions. At most one inference is active and only the newest request is retained while it runs.
 
@@ -80,4 +80,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Commit and push the verified analysis-node milestone with the user's standing authorization. Then select the overlay node as the next bounded milestone; preserve the parallel-array contract, consume normalized presentation-space segments, and do not author the user's `.fabric` scenes.
+Push the verified analysis-node milestone with the user's standing authorization. Then select the overlay node as the next bounded milestone; preserve the parallel-array contract, consume normalized presentation-space segments, and do not author the user's `.fabric` scenes.
