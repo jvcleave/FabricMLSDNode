@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Branch and HEAD: `main` at `d4e656c` (`Add frame-aligned M-LSD overlay node`)
+- Latest implementation commit on `main`: `3087797` (`Shorten M-LSD node display labels`)
 
 ## Objective and Definition of Done
 
@@ -24,7 +24,7 @@ Non-goals: changing Fabric's node layout, resizing Fabric-wide nodes, authoring 
 
 ## Milestone Status
 
-Display-label stage: both node titles and visible port labels have been shortened; the registry keys, Swift class names, port types/order/defaults, and processing code are unchanged. Fabric's `PortHydrationSession` matches snapshots by registry key and restores UUIDs while leaving code-owned display names as declared; `PluginLoader` identifies these node classes by Swift class name. Existing saved connections should therefore survive the label update. The README now uses `Frame`/`Lines`/`Scores` for direct wiring. Release plug-in build, installation, strict deep signature verification, and `git diff --check` pass; no package test is needed for this reversible metadata-only change. Visual fit in the Editor remains for the user to assess after restart. Pending commit/push.
+Display-label stage: both node titles and visible port labels have been shortened; the registry keys, Swift class names, port types/order/defaults, and processing code are unchanged. Fabric's `PortHydrationSession` matches snapshots by registry key and restores UUIDs while leaving code-owned display names as declared; `PluginLoader` identifies these node classes by Swift class name. Existing saved connections should therefore survive the label update. The README now uses `Frame`/`Lines`/`Scores` for direct wiring. Release plug-in build, installation, strict deep signature verification, and `git diff --check` pass; no package test is needed for this reversible metadata-only change. Committed and pushed at `3087797`. Visual fit in the Editor remains for the user to assess after restart.
 
 Analysis-node milestone complete, verified, committed at `b6df802`, and pushed with its checkpoint at `7427a59`; overlay milestone is implemented, verified, committed at `d4e656c`, and pushed. The overlay uses a plug-in Metal shader, Fabric-managed RGBA16-float output, a raw storage-space copy, and presentation-space instanced line quads; its source transform is retained. During wiring review, a frame-pairing gap emerged: direct reuse of the latest source image can mismatch asynchronously completed segments. An `Analyzed Image` outlet now publishes the retained source image with each completed result; the README uses it for direct overlay wiring. Debug and Release builds, package tests, offscreen identity/vertical-flip/quarter-turn GPU fixture, installed shader packaging/signature, and model/license identity checks pass. Architecture inspection confirmed that Fabric's `PortType` and `PortValue` are closed enums, while `ContiguousArray<SIMD4<Float>>` and `ContiguousArray<Float>` are already supported typed values. A self-contained plug-in therefore cannot introduce a first-class `StructuralLineFrame` port without changing Fabric; the selected parallel-array contract preserves type safety and avoids that cross-repository change.
 
@@ -82,4 +82,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Commit and push the verified label change with the user's standing authorization. Ask the user to restart Fabric Editor and confirm the node labels no longer collide; retain their existing scene and connections. Do not author the user's `.fabric` scenes.
+Await the user's visual check after restarting Fabric Editor. Confirm the labels fit and that their existing scene connections remain intact; if not, inspect the reported behavior before another bounded change. Do not author the user's `.fabric` scenes.
