@@ -3,7 +3,7 @@
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Latest implementation commit on `main`: `3087797` (`Shorten M-LSD node display labels`)
-- Latest sample/documentation commit on `main`: `a0d33a8` (`Add user-authored M-LSD Fabric example scene`)
+- Latest planning/documentation commit on `main`: `1199baa` (`Plan M-LSD points and geometry adapters`)
 
 ## Objective and Definition of Done
 
@@ -25,7 +25,7 @@ Non-goals: adding new ports or nodes now, authoring another scene, claiming infe
 
 ## Milestone Status
 
-Points/geometry plan is recorded below as a future extension, not an active implementation. It keeps 2D detection separate from planar positions and optional geometry construction, with explicit zero-line and coordinate-contract gates. The scoped documentation diff and `git diff --check` pass; no source or sample files changed. Pending commit/push.
+Points/geometry plan is recorded below as a future extension, not an active implementation. It keeps 2D detection separate from planar positions and optional geometry construction, with explicit zero-line and coordinate-contract gates. The scoped documentation diff and `git diff --check` pass; no source or sample files changed. Committed and pushed at `1199baa`.
 
 Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Committed and pushed at `a0d33a8`; no plug-in build was run because runtime source is untouched.
 
