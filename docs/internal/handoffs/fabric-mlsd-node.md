@@ -3,6 +3,7 @@
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Latest implementation commit on `main`: `3087797` (`Shorten M-LSD node display labels`)
+- Latest documentation commit on `main`: `979a260` (`Document Fabric node width API gap`)
 
 ## Objective and Definition of Done
 
@@ -24,7 +25,7 @@ Non-goals: implementing a Fabric layout change, revisiting the shortened labels,
 
 ## Milestone Status
 
-The node-width wishlist entry is drafted as section 7 of `docs/FABRIC_INTEGRATION_GAPS.md`. It records the 150-point default for all-horizontal-port nodes, the M-LSD label workaround, and a preferred/minimum or content-aware width API that would keep canvas layout consistent. Scoped documentation review and `git diff --check` pass. No source code or bundle changed; pending commit/push.
+The node-width wishlist entry is section 7 of `docs/FABRIC_INTEGRATION_GAPS.md`. It records the 150-point default for all-horizontal-port nodes, the M-LSD label workaround, and a preferred/minimum or content-aware width API that would keep canvas layout consistent. Scoped documentation review and `git diff --check` pass. No source code or bundle changed. Committed and pushed at `979a260`.
 
 Display-label stage: both node titles and visible port labels have been shortened; the registry keys, Swift class names, port types/order/defaults, and processing code are unchanged. Fabric's `PortHydrationSession` matches snapshots by registry key and restores UUIDs while leaving code-owned display names as declared; `PluginLoader` identifies these node classes by Swift class name. Existing saved connections should therefore survive the label update. The README now uses `Frame`/`Lines`/`Scores` for direct wiring. Release plug-in build, installation, strict deep signature verification, and `git diff --check` pass; no package test is needed for this reversible metadata-only change. Committed and pushed at `3087797`. Visual fit in the Editor remains for the user to assess after restart.
 
@@ -84,4 +85,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Commit and push the verified wishlist entry. Then await the user's live visual check; do not author their `.fabric` scenes.
+Await the user's live visual check of the shortened labels and existing scene connections. Do not author their `.fabric` scenes. If the Fabric API proposal is requested upstream, use section 7 as the starting point rather than modifying Fabric speculatively.
