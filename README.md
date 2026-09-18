@@ -25,7 +25,8 @@ host API improvements are tracked in
 
 ## Example
 
-The user-authored Fabric scene connects an Image Provider to `M-LSD Analyze`,
+The user-authored [MLSDExample.fabric](FabricScenes/MLSDExample.fabric) scene
+connects an Image Provider to `M-LSD Analyze`,
 passes its `Frame`, `Lines`, and `Scores` to `M-LSD Overlay`, and displays the
 result with Image Mesh.
 
@@ -128,9 +129,15 @@ swift scripts/verify_overlay_shader.swift \
 
 ## Samples
 
-Checked-in examples belong in [`FabricScenes/`](FabricScenes/). The directory
-is established now for the user-authored scenes, which will be added once the
-real nodes and their serialized port contracts are stable.
+[`FabricScenes/`](FabricScenes/) includes the example scene, its
+[`DubaiTestImage.jpg`](FabricScenes/DubaiTestImage.jpg) source image, and the
+screenshot above. After cloning, open the scene in Fabric Editor and use Image
+Provider's `File Path` picker to reselect the included JPEG, then save the
+scene. Fabric currently stores that path as an absolute file URL, so the saved
+path from the author's machine will not resolve on another machine.
+
+The example demonstrates the direct overlay path. A separate sample for
+independent use of the analysis outputs may be added later.
 
 See [ResearchFixtures/MLSD/PROVENANCE.md](ResearchFixtures/MLSD/PROVENANCE.md)
 for model source and license pins, conversion, independent reference fixtures,
