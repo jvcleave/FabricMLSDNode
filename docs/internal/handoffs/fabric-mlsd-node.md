@@ -3,7 +3,7 @@
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Latest implementation commit on `main`: `3087797` (`Shorten M-LSD node display labels`)
-- Latest documentation commit on `main`: `ed2054a` (`Show M-LSD Fabric example in README`)
+- Latest sample/documentation commit on `main`: `a0d33a8` (`Add user-authored M-LSD Fabric example scene`)
 
 ## Objective and Definition of Done
 
@@ -25,7 +25,7 @@ Non-goals: changing Fabric's file-reference behavior, editing the user's scene o
 
 ## Milestone Status
 
-Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Pending commit/push; no plug-in build was run because runtime source is untouched.
+Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Committed and pushed at `a0d33a8`; no plug-in build was run because runtime source is untouched.
 
 README screenshot stage: `FabricScenes/MLSDExample.jpg` was inspected visually; it shows the user-authored Image Provider → analysis → overlay → Image Mesh chain and visible city-line output in Fabric Editor. README embeds it by a verified relative path. `git diff --check` passed. The screenshot bytes are unchanged; the user's `.fabric` scene and source JPEG remain untracked and untouched. Committed and pushed at `ed2054a`. A still screenshot is evidence of rendering, not cadence or deterministic-export validation.
 
@@ -89,4 +89,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Commit and push the verified direct-overlay sample and documentation. Live cadence and deterministic export remain separate checks.
+Await the user's next sample or live cadence feedback. The direct-overlay scene, source JPEG, and screenshot are published; independent analysis and deterministic export remain separate future checks.
