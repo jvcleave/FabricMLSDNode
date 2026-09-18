@@ -1,6 +1,7 @@
 import CoreVideo
 import Foundation
 import Metal
+import simd
 
 final class MLSDTexturePreprocessor
 {
@@ -67,14 +68,62 @@ final class MLSDTexturePreprocessor
         self.textureCache = cache
     }
 
-    func prepare(texture sourceTexture: MTLTexture, commandQueue: MTLCommandQueue) throws -> CVPixelBuffer
+    func prepare(
+        texture sourceTexture: MTLTexture,
+        sourceSize: StructuralLineImageSize,
+        textureTransform: simd_float4x4,
+        commandQueue: MTLCommandQueue
+    ) throws -> CVPixelBuffer
+    {
+        guard commandQueue.device.registryID == self.device.registryID else
+        {
+            throw MLSDStructuralLineError.deviceMismatch
+        }
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else
+        {
+            throw MLSDStructuralLineError.commandEncodingFailed
+        }
+        commandBuffer.label = "M-LSD texture preprocessing"
+        let pixelBuffer = try self.encode(
+            texture: sourceTexture,
+            sourceSize: sourceSize,
+            textureTransform: textureTransform,
+            commandBuffer: commandBuffer
+        )
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        guard commandBuffer.status == .completed else
+        {
+            throw MLSDStructuralLineError.gpuExecutionFailed(
+                commandBuffer.error?.localizedDescription
+            )
+        }
+        return pixelBuffer
+    }
+
+    /// Encodes preprocessing after upstream work already present in the
+    /// caller's command buffer. The caller owns submission and synchronization.
+    func encode(
+        texture sourceTexture: MTLTexture,
+        sourceSize: StructuralLineImageSize,
+        textureTransform: simd_float4x4,
+        commandBuffer: MTLCommandBuffer
+    ) throws -> CVPixelBuffer
     {
         guard sourceTexture.width > 0, sourceTexture.height > 0 else
         {
             throw MLSDStructuralLineError.invalidSourceTexture
         }
+        guard sourceSize.width > 0,
+              sourceSize.height > 0,
+              sourceSize.width <= Int(UInt32.max),
+              sourceSize.height <= Int(UInt32.max)
+        else
+        {
+            throw StructuralLineValidationError.invalidSourceSize
+        }
         guard sourceTexture.device.registryID == self.device.registryID,
-              commandQueue.device.registryID == self.device.registryID
+              commandBuffer.device.registryID == self.device.registryID
         else
         {
             throw MLSDStructuralLineError.deviceMismatch
@@ -114,17 +163,29 @@ final class MLSDTexturePreprocessor
             throw MLSDStructuralLineError.destinationTextureCreationFailed(textureStatus)
         }
 
-        guard let commandBuffer = commandQueue.makeCommandBuffer(),
-              let encoder = commandBuffer.makeComputeCommandEncoder()
-        else
+        guard let encoder = commandBuffer.makeComputeCommandEncoder() else
         {
             throw MLSDStructuralLineError.commandEncodingFailed
         }
-        commandBuffer.label = "M-LSD texture preprocessing"
-        encoder.label = "Resize source texture to M-LSD 512x512 RGB input"
+        encoder.label = "Orient and resize source texture to M-LSD 512x512 RGB input"
         encoder.setComputePipelineState(self.pipeline)
         encoder.setTexture(sourceTexture, index: 0)
         encoder.setTexture(destinationTexture, index: 1)
+        var transform = textureTransform
+        var presentationSize = SIMD2<UInt32>(
+            UInt32(sourceSize.width),
+            UInt32(sourceSize.height)
+        )
+        encoder.setBytes(
+            &transform,
+            length: MemoryLayout<simd_float4x4>.stride,
+            index: 0
+        )
+        encoder.setBytes(
+            &presentationSize,
+            length: MemoryLayout<SIMD2<UInt32>>.stride,
+            index: 1
+        )
         let width = self.pipeline.threadExecutionWidth
         let height = max(1, min(8, self.pipeline.maxTotalThreadsPerThreadgroup / width))
         encoder.dispatchThreads(
@@ -132,14 +193,6 @@ final class MLSDTexturePreprocessor
             threadsPerThreadgroup: MTLSize(width: width, height: height, depth: 1)
         )
         encoder.endEncoding()
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
-        guard commandBuffer.status == .completed else
-        {
-            throw MLSDStructuralLineError.gpuExecutionFailed(
-                commandBuffer.error?.localizedDescription
-            )
-        }
         return pixelBuffer
     }
 }

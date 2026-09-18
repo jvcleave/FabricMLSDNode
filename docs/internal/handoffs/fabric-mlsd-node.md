@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Branch and HEAD: `main` at `53c8467` (`Add Fabric plugin scaffold and model variant workflow`)
+- Branch and HEAD: `main` at `49e5e73` (`Record completed plugin scaffold milestone`)
 
 ## Objective and Definition of Done
 
@@ -16,15 +16,21 @@ The resulting Fabric plug-in is explicitly self-contained: MESS is migration pro
 
 ## Selected Bounded Milestone
 
-Document and support reproducible model-variant conversion. Add `BUILDING_MODEL_VARIANTS.md`, parameterize the research converter for the official 320/512 and tiny/large checkpoint families where the pinned upstream architecture supports it, and preserve the verified 512-tiny output as the default. Clearly separate conversion support from runtime support: alternate variants are not production-supported until the Swift model contract, preprocessing, decoding, hashes, fixtures, and performance checks are deliberately updated and verified.
+Implement and register the Fabric analysis node while preserving a Fabric-independent core package. Extend preprocessing so it can encode onto Fabric's current command buffer, honor `FabricImage.textureTransform` and presentation dimensions, and defer Core ML prediction until the buffer completes. The node publishes the closed Fabric type system's reusable representation: `ContiguousArray<SIMD4<Float>>` segments packed as `[x0, y0, x1, y1]`, index-aligned `ContiguousArray<Float>` confidences, line count, and presentation source size. Coordinates remain normalized bottom-left.
 
-Definition of done: the guide contains a reproducible environment and pinned-source workflow, exact variant commands, variant configuration mapping, artifact installation checklist, Swift assumptions to update, licensing/hash requirements, parity acceptance criteria, performance validation, and final package/plug-in verification. The converter exposes validated variant selection without changing its no-argument defaults for the accepted 512-tiny path. Focused static checks and the existing package tests pass.
+Use one-active/one-latest-pending scheduling. A completed inference re-enters on the main actor, stores its result, and marks the Processor node dirty so publication occurs during a later graph execution rather than from a Metal completion callback. Production inference uses `.cpuAndGPU`. Confidence, maximum line count, and analysis interval remain typed parameter ports. Changing decoder parameters schedules a fresh analysis; an absent image publishes an empty state.
 
-Non-goals for this milestone: shipping a second production model, claiming runtime compatibility without validating it, implementing Fabric nodes, authoring `.fabric` scenes, changing MESS, committing, or pushing.
+Definition of done: identity preprocessing retains the pinned city parity; an independent orientation fixture verifies transformed presentation sampling; asynchronous analysis is encoded into a caller-owned command buffer without committing or waiting on it; the node compiles against Fabric, is registered by the plug-in, has stable documented ports, and the package tests plus Debug plug-in build and bundle checks pass.
+
+Non-goals for this milestone: overlay rendering, custom Fabric-wide port types, alternate production models, temporal tracking, `.fabric` scene authoring, MESS changes, or Fabric source changes.
 
 ## Milestone Status
 
-Complete, verified, committed, and pushed at `53c8467`. `BUILDING_MODEL_VARIANTS.md`, pinned research dependencies, shared variant configuration, converter selection, reference-generator selection and shape validation, and focused Python tests are implemented. The pinned upstream checkout was inspected at the exact recorded commit. Its 320-tiny README example incorrectly says 512/256; direct inspection of all eight shipped TFLite artifacts confirms both 320 families use a 320 input and 160 map, while both 512 families use a 512 input and 256 map.
+Complete and verified; pending authorized commit. Architecture inspection confirmed that Fabric's `PortType` and `PortValue` are closed enums, while `ContiguousArray<SIMD4<Float>>` and `ContiguousArray<Float>` are already supported typed values. A self-contained plug-in therefore cannot introduce a first-class `StructuralLineFrame` port without changing Fabric; the selected parallel-array contract preserves type safety and avoids that cross-repository change.
+
+Fabric supplies one uncommitted command buffer for an execution pass. Starting a separate preprocessing command buffer from `execute()` could race upstream image production, so preprocessing will be encoded after upstream work on the supplied buffer. Core ML prediction begins only in its completion handler. Fabric's `markDirty()` is not documented as thread-safe; completion publication will therefore be staged through `Task { @MainActor in ... }`, consistent with Fabric's existing asynchronous node state transitions. At most one inference is active and only the newest request is retained while it runs.
+
+The core implementation stage is complete. Preprocessing now accepts presentation dimensions and a canonical-to-stored texture transform, can encode without committing a caller-owned command buffer, and dispatches Core ML prediction to a dedicated serial queue after GPU completion. The analysis node and plug-in registration are implemented with the selected typed-array contract and one-active/one-latest-pending scheduling. `docs/FABRIC_INTEGRATION_GAPS.md` records six host constraints and possible API directions, including the deterministic-export and plug-in-build limitations.
 
 ## Relevant Files
 
@@ -35,6 +41,7 @@ Complete, verified, committed, and pushed at `53c8467`. `BUILDING_MODEL_VARIANTS
 - `Sources/MLSDStructuralLineKit/`
 - `Tests/MLSDStructuralLineKitTests/`
 - `BUILDING_MODEL_VARIANTS.md`
+- `docs/FABRIC_INTEGRATION_GAPS.md`
 - `ResearchFixtures/MLSD/Conversion/mlsd_variants.py`
 - `ResearchFixtures/MLSD/Conversion/requirements-model-conversion.txt`
 - `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/BodyMeshProvider/BodyMeshProvider/BodyMeshProvider.xcodeproj/project.pbxproj`
@@ -60,15 +67,17 @@ Release `xcodebuild` also passed. Its arm64 bundle and the installed copy both p
 
 Current documentation/tooling checks: the two Python variant-contract tests pass; all three research scripts compile; converter `--help` exposes the four variants and defaults to 512-tiny; the existing Core ML artifact compiles successfully with `coremlcompiler`; `swift test` still passes all 6 tests in 2 suites. A clean Python 3.10 install exposed an incompatible unconstrained SciPy selection, so compatible JAX 0.4.30, JAXlib 0.4.30, and SciPy 1.10.1 versions are now pinned. With those pins, the converter regenerated 512-tiny successfully from the pinned checkpoint and the parameterized reference generator produced JSON and preview files byte-for-byte identical to the accepted baseline. The regenerated `.mlmodel` hash differs because its descriptive author metadata no longer mentions MESS; CPU numerical parity is unchanged.
 
+Current analysis-node checks: `swift test` passes all 7 tests in 2 suites. The unchanged identity path still reproduces 46 city-reference lines; the public asynchronous API leaves its caller-owned command buffer unsubmitted; and a new independent 2-by-2 color fixture verifies that a Fabric-style vertical transform flips preprocessing into presentation orientation correctly. Debug and Release `xcodebuild` both pass and install the plug-in; Release was rebuilt after the final source review. The installed arm64 bundle passes strict deep signature verification, retains API version 1 and the expected principal class, contains the analysis-node symbols and orientation-aware Metal source, and preserves the pinned model and license hashes. The builds emit existing Fabric dependency and stale module-cache warnings; no warning names the new plug-in source. The final review added an immutable transform snapshot per request, stale-result invalidation when the image disconnects, and recoverable presentation-size validation. Package tests and `git diff --check` still pass. No live Fabric Editor scene has been authored or run.
+
 All four official variants converted successfully and passed CPU parity on both fixtures. City results at score `0.05`: 320-tiny 5/5 lines with `1.09e-6` maximum score error and `0.00219` maximum displacement error; 320-large 10/10 with `4.20e-6` and `0.01236`; 512-tiny 46/46 with `3.93e-6` and `0.01477`; 512-large 45/45 with `5.33e-6` and `0.01942`. Every variant had matching TFLite/Core ML segment counts at every recorded threshold on both city and sky-control fixtures. The 320-large sky control reordered raw low-confidence centers while retaining all count and error gates; the public guide explains why this requires investigation but is not itself evidence of a meaningful detection mismatch. Temporary verification outputs remain under `/tmp/fabric-mlsd-variant-verification.eEIuSi` and are recoverable by rerunning the documented commands; they are not repository inputs.
 
 ## Unresolved Concerns
 
-- The later Fabric adapter needs a safe asynchronous node-invalidation path after inference completes; current `Node.markDirty()` has no documented thread-safety contract.
-- Fabric image preprocessing must honor `FabricImage.textureTransform` and presentation dimensions instead of assuming storage orientation.
+- Live Fabric Editor validation still requires restarting the app after installation and will be performed after the node builds; the user will create the sample scenes.
+- Fabric has no same-frame barrier for asynchronous GPU-to-CPU analysis during deterministic export. The first node will explicitly support bounded latest-frame interactive analysis; the limitation and possible host APIs are recorded in `docs/FABRIC_INTEGRATION_GAPS.md`.
 - The later MESS migration must be handled as a separate cross-repository milestone.
 - The user will author the `.fabric` sample scenes after the node contracts stabilize. `FabricScenes/README.md` records the intended direct-overlay and independent-analysis scenarios; Codex should not create placeholder scene files.
 
 ## Next Exact Action
 
-Define the analysis-node architecture and Fabric API boundary as the next bounded milestone, including a safe asynchronous invalidation path and correct handling of `FabricImage.textureTransform`. Inspect the current Fabric image-node, typed-port, execution, serialization, and plugin-node patterns before implementation. Do not begin the overlay node or sample scenes in that milestone.
+Commit and push the verified analysis-node milestone with the user's standing authorization. Then select the overlay node as the next bounded milestone; preserve the parallel-array contract, consume normalized presentation-space segments, and do not author the user's `.fabric` scenes.

@@ -1,5 +1,7 @@
 import CoreML
+import CoreVideo
 import Metal
+import simd
 
 struct MLSDBackboneOutput
 {
@@ -71,21 +73,50 @@ final class MLSDBackbone
                 bytesPerRow: 4
             )
         }
-        _ = try self.predict(texture: texture, commandQueue: commandQueue)
+        _ = try self.predict(
+            texture: texture,
+            sourceSize: StructuralLineImageSize(width: 1, height: 1),
+            textureTransform: matrix_identity_float4x4,
+            commandQueue: commandQueue
+        )
     }
 
     func predict(
         texture: MTLTexture,
+        sourceSize: StructuralLineImageSize,
+        textureTransform: simd_float4x4,
         commandQueue: MTLCommandQueue
     ) throws -> MLSDBackboneOutput
+    {
+        let pixelBuffer = try self.preprocessor.prepare(
+            texture: texture,
+            sourceSize: sourceSize,
+            textureTransform: textureTransform,
+            commandQueue: commandQueue
+        )
+        return try self.predict(pixelBuffer: pixelBuffer)
+    }
+
+    func encodePreprocessing(
+        texture: MTLTexture,
+        sourceSize: StructuralLineImageSize,
+        textureTransform: simd_float4x4,
+        commandBuffer: MTLCommandBuffer
+    ) throws -> CVPixelBuffer
+    {
+        try self.preprocessor.encode(
+            texture: texture,
+            sourceSize: sourceSize,
+            textureTransform: textureTransform,
+            commandBuffer: commandBuffer
+        )
+    }
+
+    func predict(pixelBuffer: CVPixelBuffer) throws -> MLSDBackboneOutput
     {
         self.predictionLock.lock()
         defer { self.predictionLock.unlock() }
 
-        let pixelBuffer = try self.preprocessor.prepare(
-            texture: texture,
-            commandQueue: commandQueue
-        )
         let input = try MLDictionaryFeatureProvider(dictionary: [
             MLSDModelMetadata.inputName: MLFeatureValue(pixelBuffer: pixelBuffer),
         ])

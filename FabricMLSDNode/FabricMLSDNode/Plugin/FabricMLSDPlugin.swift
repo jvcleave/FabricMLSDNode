@@ -16,7 +16,6 @@ public final class FabricMLSDPlugin: NSObject, FabricPlugin
 
     public static func additionalNodeClasses() -> [Node.Type]
     {
-        // Real node classes are added in their own bounded milestone.
-        []
+        [MLSDStructuralLineAnalysisNode.self]
     }
 }

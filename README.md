@@ -19,6 +19,10 @@ direct overlay path and independent use of the analysis outputs. See
 [`docs/internal/handoffs/fabric-mlsd-node.md`](docs/internal/handoffs/fabric-mlsd-node.md)
 for current milestone status.
 
+Current Fabric constraints, the plug-in's local adaptations, and candidate
+host API improvements are tracked in
+[`docs/FABRIC_INTEGRATION_GAPS.md`](docs/FABRIC_INTEGRATION_GAPS.md).
+
 ## Development layout
 
 The default local layout is:
@@ -67,8 +71,26 @@ registry starts. Fabric is compiled in the repository-local `.fabric-spm/`
 scratch directory so the plug-in build does not depend on or overwrite the
 adjacent checkout's existing `.build` cache.
 
-The bundle foundation intentionally registers no nodes yet. Node registration
-will be added with the analysis and overlay implementation milestone.
+## Analysis node contract
+
+The plug-in currently registers `M-LSD Structural Line Analysis`. It accepts a
+Fabric image plus minimum confidence, maximum line count, and analysis interval
+parameters. It publishes:
+
+- `Line Segments`: `Array<Vector4>`, with each value packed as
+  `[startX, startY, endX, endY]` in normalized bottom-left coordinates.
+- `Line Confidences`: an index-aligned `Array<Float>`.
+- `Line Count`: the number of completed segments.
+- `Source Size`: the analyzed image's presentation width and height.
+
+The node encodes orientation-aware preprocessing into Fabric's current command
+buffer, then performs Core ML inference asynchronously after GPU completion.
+It permits one active inference and retains only the newest eligible pending
+image. Outputs therefore represent the latest completed interactive analysis;
+Fabric currently has no same-frame asynchronous barrier for deterministic
+export. That limitation is detailed in the integration-gaps document above.
+
+The separate overlay node remains the next implementation milestone.
 
 ## Samples
 

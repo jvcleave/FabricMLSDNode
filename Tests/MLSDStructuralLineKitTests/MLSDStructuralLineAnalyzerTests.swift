@@ -1,6 +1,8 @@
 import CoreML
+import CoreVideo
 import Metal
 import MetalKit
+import simd
 import Testing
 @testable import MLSDStructuralLineKit
 
@@ -47,7 +49,7 @@ struct MLSDStructuralLineAnalyzerTests
     }
 
     @Test("CPU model and Swift decoder reproduce the pinned city reference")
-    func reproducesCityReference() throws
+    func reproducesCityReference() async throws
     {
         let device = try #require(MTLCreateSystemDefaultDevice())
         let commandQueue = try #require(device.makeCommandQueue())
@@ -64,7 +66,7 @@ struct MLSDStructuralLineAnalyzerTests
             .deletingLastPathComponent()
         let sourceURL = packageRoot
             .appendingPathComponent("ResearchFixtures/MLSD/Sources/city-28s.png")
-        let texture = try MTKTextureLoader(device: device).newTexture(
+        let texture = try await MTKTextureLoader(device: device).newTexture(
             URL: sourceURL,
             options: [
                 .SRGB: false,
@@ -96,11 +98,27 @@ struct MLSDStructuralLineAnalyzerTests
             device: device,
             modelConfiguration: gpuConfiguration
         )
-        let gpuFrame = try gpuAnalyzer.analyze(
-            texture: texture,
-            sourceSize: StructuralLineImageSize(width: 1_280, height: 720),
-            commandQueue: commandQueue
-        )
+        let gpuCommandBuffer = try #require(commandQueue.makeCommandBuffer())
+        let gpuFrame: StructuralLineFrame = try await withCheckedThrowingContinuation
+        { continuation in
+            do
+            {
+                try gpuAnalyzer.analyzeAfterCommandBufferCompletes(
+                    texture: texture,
+                    sourceSize: StructuralLineImageSize(width: 1_280, height: 720),
+                    commandBuffer: gpuCommandBuffer
+                )
+                { result in
+                    continuation.resume(with: result)
+                }
+                #expect(gpuCommandBuffer.status == .notEnqueued)
+                gpuCommandBuffer.commit()
+            }
+            catch
+            {
+                continuation.resume(throwing: error)
+            }
+        }
         #expect(gpuFrame.edges.count >= 40)
         #expect(gpuFrame.edges.count <= 60)
         #expect(gpuFrame.junctions.count == gpuFrame.edges.count * 2)
@@ -108,8 +126,79 @@ struct MLSDStructuralLineAnalyzerTests
         #expect(abs(gpuFrame.junctions[0].position.y - firstStart.y) < 0.01)
     }
 
+    @Test("Preprocessing honors presentation orientation on a caller-owned command buffer")
+    func preprocessesPresentationOrientation() throws
+    {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        let commandQueue = try #require(device.makeCommandQueue())
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: .rgba8Unorm,
+            width: 2,
+            height: 2,
+            mipmapped: false
+        )
+        descriptor.storageMode = .shared
+        descriptor.usage = .shaderRead
+        let texture = try #require(device.makeTexture(descriptor: descriptor))
+        let pixels: [UInt8] = [
+            255, 0, 0, 255, 0, 255, 0, 255,
+            0, 0, 255, 255, 255, 255, 255, 255,
+        ]
+        try pixels.withUnsafeBytes
+        { bytes in
+            let baseAddress = try #require(bytes.baseAddress)
+            texture.replace(
+                region: MTLRegionMake2D(0, 0, 2, 2),
+                mipmapLevel: 0,
+                withBytes: baseAddress,
+                bytesPerRow: 8
+            )
+        }
+
+        let preprocessor = try MLSDTexturePreprocessor(device: device)
+        let commandBuffer = try #require(commandQueue.makeCommandBuffer())
+        let verticalFlip = simd_float4x4(
+            SIMD4(1, 0, 0, 0),
+            SIMD4(0, -1, 0, 0),
+            SIMD4(0, 0, 1, 0),
+            SIMD4(0, 1, 0, 1)
+        )
+        let pixelBuffer = try preprocessor.encode(
+            texture: texture,
+            sourceSize: StructuralLineImageSize(width: 2, height: 2),
+            textureTransform: verticalFlip,
+            commandBuffer: commandBuffer
+        )
+
+        #expect(commandBuffer.status == .notEnqueued)
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+        #expect(commandBuffer.status == .completed)
+
+        let topLeft = try self.rgbPixel(pixelBuffer, x: 64, y: 64)
+        let bottomLeft = try self.rgbPixel(pixelBuffer, x: 64, y: 448)
+        #expect(topLeft == SIMD3<UInt8>(0, 0, 255))
+        #expect(bottomLeft == SIMD3<UInt8>(255, 0, 0))
+    }
+
     private func set(_ array: MLMultiArray, _ indices: [Int], _ value: Float)
     {
         array[indices.map(NSNumber.init(value:))] = NSNumber(value: value)
+    }
+
+    private func rgbPixel(
+        _ pixelBuffer: CVPixelBuffer,
+        x: Int,
+        y: Int
+    ) throws -> SIMD3<UInt8>
+    {
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+        let baseAddress = try #require(CVPixelBufferGetBaseAddress(pixelBuffer))
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let pixelAddress = baseAddress
+            .advanced(by: y * bytesPerRow + x * 4)
+            .assumingMemoryBound(to: UInt8.self)
+        return SIMD3(pixelAddress[2], pixelAddress[1], pixelAddress[0])
     }
 }
