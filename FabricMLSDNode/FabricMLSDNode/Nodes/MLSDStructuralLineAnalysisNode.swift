@@ -8,7 +8,7 @@ import simd
 
 public final class MLSDStructuralLineAnalysisNode: Node
 {
-    public override class var name: String { "M-LSD Structural Line Analysis" }
+    public override class var name: String { "M-LSD Analyze" }
     public override class var nodeType: Node.NodeType { .Image(imageType: .Analysis) }
     public override class var nodeExecutionMode: Node.ExecutionMode { .Processor }
     public override class var nodeTimeMode: Node.TimeMode { .None }
@@ -33,7 +33,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
                 "inputMinimumConfidence",
                 ParameterPort(
                     parameter: FloatParameter(
-                        "Minimum Confidence",
+                        "Min Score",
                         0.05,
                         0,
                         1,
@@ -46,7 +46,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
                 "inputMaximumLines",
                 ParameterPort(
                     parameter: IntParameter(
-                        "Maximum Lines",
+                        "Max Lines",
                         200,
                         1,
                         200,
@@ -59,7 +59,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
                 "inputAnalysisInterval",
                 ParameterPort(
                     parameter: IntParameter(
-                        "Analysis Interval",
+                        "Interval",
                         1,
                         1,
                         120,
@@ -71,7 +71,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
             (
                 "outputSegments",
                 NodePort<ContiguousArray<SIMD4<Float>>>(
-                    name: "Line Segments",
+                    name: "Lines",
                     kind: .Outlet,
                     description: "Normalized bottom-left [startX, startY, endX, endY] values"
                 )
@@ -79,15 +79,15 @@ public final class MLSDStructuralLineAnalysisNode: Node
             (
                 "outputConfidences",
                 NodePort<ContiguousArray<Float>>(
-                    name: "Line Confidences",
+                    name: "Scores",
                     kind: .Outlet,
-                    description: "Confidence values index-aligned with Line Segments"
+                    description: "Confidence values index-aligned with Lines"
                 )
             ),
             (
                 "outputLineCount",
                 NodePort<Int>(
-                    name: "Line Count",
+                    name: "Count",
                     kind: .Outlet,
                     description: "Number of lines in the current completed analysis"
                 )
@@ -95,7 +95,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
             (
                 "outputSourceSize",
                 NodePort<SIMD2<Float>>(
-                    name: "Source Size",
+                    name: "Size",
                     kind: .Outlet,
                     description: "Presentation width and height of the analyzed image"
                 )
@@ -103,9 +103,9 @@ public final class MLSDStructuralLineAnalysisNode: Node
             (
                 "outputAnalyzedImage",
                 NodePort<FabricImage>(
-                    name: "Analyzed Image",
+                    name: "Frame",
                     kind: .Outlet,
-                    description: "The image paired with the completed Line Segments result"
+                    description: "The image paired with the completed Lines result"
                 )
             ),
         ]

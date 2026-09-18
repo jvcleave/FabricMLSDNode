@@ -7,7 +7,7 @@ import simd
 /// Renders normalized, bottom-left line segments over a Fabric image without running inference.
 public final class MLSDStructuralLineOverlayNode: Node
 {
-    public override class var name: String { "M-LSD Structural Line Overlay" }
+    public override class var name: String { "M-LSD Overlay" }
     public override class var nodeType: Node.NodeType { .Image(imageType: .Composite) }
     public override class var nodeExecutionMode: Node.ExecutionMode { .Processor }
     public override class var nodeTimeMode: Node.TimeMode { .None }
@@ -22,21 +22,21 @@ public final class MLSDStructuralLineOverlayNode: Node
         [
             ("inputImage", NodePort<FabricImage>(name: "Image", kind: .Inlet,
                 description: "Background image in Fabric presentation orientation")),
-            ("inputSegments", NodePort<ContiguousArray<SIMD4<Float>>>(name: "Line Segments", kind: .Inlet,
+            ("inputSegments", NodePort<ContiguousArray<SIMD4<Float>>>(name: "Lines", kind: .Inlet,
                 description: "Normalized bottom-left [startX, startY, endX, endY] segments")),
-            ("inputConfidences", NodePort<ContiguousArray<Float>>(name: "Line Confidences", kind: .Inlet,
-                description: "Optional confidence values aligned with Line Segments")),
+            ("inputConfidences", NodePort<ContiguousArray<Float>>(name: "Scores", kind: .Inlet,
+                description: "Optional confidence values aligned with Lines")),
             ("inputColor", ParameterPort(parameter: Float4Parameter(
-                "Line Color", simd_float4(0, 1, 1, 1), .colorpicker,
+                "Color", simd_float4(0, 1, 1, 1), .colorpicker,
                 "Overlay line color (RGBA)"))),
             ("inputWidth", ParameterPort(parameter: FloatParameter(
-                "Line Width", 2, 0.5, 32, .slider,
+                "Width", 2, 0.5, 32, .slider,
                 "Line width in presentation pixels"))),
             ("inputOpacity", ParameterPort(parameter: FloatParameter(
                 "Opacity", 1, 0, 1, .slider,
                 "Overlay opacity multiplied by line color alpha"))),
             ("inputMinimumConfidence", ParameterPort(parameter: FloatParameter(
-                "Minimum Confidence", 0, 0, 1, .slider,
+                "Min Score", 0, 0, 1, .slider,
                 "Only draw lines meeting this confidence; requires aligned confidences"))),
             ("outputImage", NodePort<FabricImage>(name: "Image", kind: .Outlet,
                 description: "Source image with anti-aliased structural lines")),

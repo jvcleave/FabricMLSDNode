@@ -73,16 +73,15 @@ adjacent checkout's existing `.build` cache.
 
 ## Analysis node contract
 
-The plug-in registers `M-LSD Structural Line Analysis`. It accepts a
-Fabric image plus minimum confidence, maximum line count, and analysis interval
-parameters. It publishes:
+The plug-in registers `M-LSD Analyze`. It accepts an `Image` plus `Min Score`
+(minimum confidence), `Max Lines`, and `Interval` parameters. It publishes:
 
-- `Line Segments`: `Array<Vector4>`, with each value packed as
+- `Lines`: `Array<Vector4>`, with each value packed as
   `[startX, startY, endX, endY]` in normalized bottom-left coordinates.
-- `Line Confidences`: an index-aligned `Array<Float>`.
-- `Line Count`: the number of completed segments.
-- `Source Size`: the analyzed image's presentation width and height.
-- `Analyzed Image`: the source image paired with those completed segments.
+- `Scores`: an index-aligned confidence `Array<Float>`.
+- `Count`: the number of completed segments.
+- `Size`: the analyzed image's presentation width and height.
+- `Frame`: the source image paired with those completed segments.
 
 The node encodes orientation-aware preprocessing into Fabric's current command
 buffer, then performs Core ML inference asynchronously after GPU completion.
@@ -93,13 +92,13 @@ export. That limitation is detailed in the integration-gaps document above.
 
 ## Overlay node contract
 
-`M-LSD Structural Line Overlay` accepts an `Image`, `Line Segments` in the
+`M-LSD Overlay` accepts an `Image`, `Lines` in the
 analysis node's normalized bottom-left `Array<Vector4>` format, and optional
-index-aligned `Line Confidences` (`Array<Float>`). Connect the analysis node's
+index-aligned `Scores` (`Array<Float>`). Connect the analysis node's
 two array outlets to the identically named overlay inlets. The overlay works
 with any compatible segment producer; it does not run inference.
 
-For frame-aligned interactive results, connect `Analyzed Image` to the overlay's
+For frame-aligned interactive results, connect analysis `Frame` to the overlay's
 `Image` inlet. Connecting the current upstream image instead is possible, but
 its content can be newer than the asynchronously completed line arrays.
 
