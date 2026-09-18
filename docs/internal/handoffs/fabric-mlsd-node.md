@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Branch and HEAD: `main` at `7427a59` (`Record completed analysis node milestone`)
+- Branch and HEAD: `main` at `d4e656c` (`Add frame-aligned M-LSD overlay node`)
 
 ## Objective and Definition of Done
 
@@ -26,7 +26,7 @@ Non-goals for this milestone: authoring `.fabric` scenes, changing the already-p
 
 ## Milestone Status
 
-Analysis-node milestone complete, verified, committed at `b6df802`, and pushed with its checkpoint at `7427a59`; overlay milestone is implemented and verified, pending commit/push. The overlay uses a plug-in Metal shader, Fabric-managed RGBA16-float output, a raw storage-space copy, and presentation-space instanced line quads; its source transform is retained. During wiring review, a frame-pairing gap emerged: direct reuse of the latest source image can mismatch asynchronously completed segments. An `Analyzed Image` outlet now publishes the retained source image with each completed result; the README uses it for direct overlay wiring. Debug and Release builds, package tests, offscreen identity/vertical-flip/quarter-turn GPU fixture, installed shader packaging/signature, and model/license identity checks pass. Architecture inspection confirmed that Fabric's `PortType` and `PortValue` are closed enums, while `ContiguousArray<SIMD4<Float>>` and `ContiguousArray<Float>` are already supported typed values. A self-contained plug-in therefore cannot introduce a first-class `StructuralLineFrame` port without changing Fabric; the selected parallel-array contract preserves type safety and avoids that cross-repository change.
+Analysis-node milestone complete, verified, committed at `b6df802`, and pushed with its checkpoint at `7427a59`; overlay milestone is implemented, verified, committed at `d4e656c`, and pushed. The overlay uses a plug-in Metal shader, Fabric-managed RGBA16-float output, a raw storage-space copy, and presentation-space instanced line quads; its source transform is retained. During wiring review, a frame-pairing gap emerged: direct reuse of the latest source image can mismatch asynchronously completed segments. An `Analyzed Image` outlet now publishes the retained source image with each completed result; the README uses it for direct overlay wiring. Debug and Release builds, package tests, offscreen identity/vertical-flip/quarter-turn GPU fixture, installed shader packaging/signature, and model/license identity checks pass. Architecture inspection confirmed that Fabric's `PortType` and `PortValue` are closed enums, while `ContiguousArray<SIMD4<Float>>` and `ContiguousArray<Float>` are already supported typed values. A self-contained plug-in therefore cannot introduce a first-class `StructuralLineFrame` port without changing Fabric; the selected parallel-array contract preserves type safety and avoids that cross-repository change.
 
 Fabric supplies one uncommitted command buffer for an execution pass. Starting a separate preprocessing command buffer from `execute()` could race upstream image production, so preprocessing will be encoded after upstream work on the supplied buffer. Core ML prediction begins only in its completion handler. Fabric's `markDirty()` is not documented as thread-safe; completion publication will therefore be staged through `Task { @MainActor in ... }`, consistent with Fabric's existing asynchronous node state transitions. At most one inference is active and only the newest request is retained while it runs.
 
@@ -82,4 +82,4 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Commit and push the verified overlay milestone using the user's standing authorization. Then ask the user to build and inspect a Fabric scene connecting `Analyzed Image`, `Line Segments`, and `Line Confidences` to the overlay; continue only on concrete live-scene feedback or another bounded milestone. Do not author the user's `.fabric` scenes.
+Await the user's Fabric scene and live visual/cadence feedback. The direct scene wiring is analysis `Analyzed Image` → overlay `Image`, `Line Segments` → `Line Segments`, and `Line Confidences` → `Line Confidences`; an upstream image feeds analysis. If issues appear, first reproduce the scoped scene behavior, then select one bounded fix milestone. Do not author the user's `.fabric` scenes.
