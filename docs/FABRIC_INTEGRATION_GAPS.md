@@ -146,13 +146,24 @@ node stops or leaves the graph.
 adjacent checkout. Using Fabric's existing `.build` tree failed when that tree
 contained module artifacts from a different compiler. Under Xcode 27, the
 default SwiftPM build system also omitted the module-map layout required by
-Fabric's current external plug-in setup.
+Fabric's current external plug-in setup. Swift modules are compiler- and
+configuration-sensitive, so architecture, toolchain, and Debug/Release must
+also agree between the host artifacts and the plug-in build.
+
+The plug-in currently compiles against Fabric's generated module files and
+uses `-undefined dynamic_lookup` so its Fabric symbols resolve from the host at
+runtime. Its Swift include paths, C/C++ module maps, and transitive framework
+paths therefore point inside SwiftPM's scratch-directory layout. Those paths
+are build-system implementation details, not a supported Fabric SDK contract.
+They can change without any source-level Fabric API change.
 
 **Local workaround:** The Xcode preparation phase builds Fabric in this
 repository's ignored `.fabric-spm/` scratch directory with SwiftPM's native
 build system, then points the plug-in compiler and linker at that isolated
 configuration-matched output. Debug and Release are built separately, and the
-host Editor must use the matching configuration.
+host Editor must use the matching configuration. This prevents an unrelated
+Fabric build from poisoning the plug-in build, but it does not make the
+artifact paths or linking model stable.
 
 **Potential Fabric tooling direction:** Publish a supported Fabric SDK or
 package product for plug-in compilation with stable module and linker paths,
@@ -160,6 +171,44 @@ or provide an official build helper that resolves the host revision, compiler,
 architecture, and Debug/Release variant without depending on SwiftPM's
 internal scratch layout. This is a build/distribution concern rather than a
 runtime Node API change.
+
+[#308](https://github.com/Fabric-Project/Fabric/issues/308) proposes a separate
+Fabric plug-in target to avoid redundant SwiftPM resources and framework
+embedding. That is a useful foundation, but resource cleanup alone does not
+cover compiler compatibility, configuration selection, module-map discovery,
+runtime symbol ownership, or host/API-version compatibility.
+
+An acceptable supported build surface should:
+
+1. Expose the node, port, parameter, plug-in registration, execution,
+   `FabricImage`, error, and required Satin/Metal-facing contracts through a
+   deliberately public product or SDK.
+2. Build with, or provide compatible module interfaces for, the consuming
+   plug-in's Swift toolchain, target triple, architecture, and configuration.
+3. Preserve one host-owned Fabric runtime and one set of Node/Port type
+   identities. A plug-in must not statically embed a second Fabric registry or
+   runtime merely because it declared a package dependency.
+4. Define the supported link/load mechanism—such as an official host-resolved
+   dynamic-lookup setup or a shared dynamic framework—and provide stable
+   compiler, linker, runpath, and module-map inputs for it.
+5. Exclude Editor code, samples, models, shaders, and unrelated package
+   resources/frameworks from the plug-in-facing surface.
+6. Match the compiled surface to `FabricPluginAPIVersion` and report an
+   actionable incompatibility when the host cannot load a plug-in safely.
+7. Support clean-checkout Xcode and command-line/CI builds without consumers
+   discovering or hard-coding paths under `.build` or another scratch tree.
+8. Include a minimal external plug-in fixture that Fabric's CI builds and
+   loads in both Debug and Release, guarding discovery, subclassing,
+   registration, serialization, and symbol resolution.
+
+A source-based `FabricPluginAPI` product is likely the simplest approach while
+Fabric evolves rapidly, provided both the host and plug-ins share the same
+runtime definitions rather than embedding duplicates. A versioned binary SDK
+or XCFramework is another option, but it would need library-evolution module
+interfaces, architecture coverage, distribution/versioning policy, and a
+guarantee that the host ships the corresponding runtime. If #308 remains
+limited to resource embedding, this broader build contract should be a linked,
+focused SDK/tooling issue rather than being treated as solved by #308.
 
 ## 7. Plug-ins cannot request a wider canvas node
 
