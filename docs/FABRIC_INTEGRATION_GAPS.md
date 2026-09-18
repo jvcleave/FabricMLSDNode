@@ -142,6 +142,90 @@ node stops or leaves the graph.
 
 ## 6. External plug-in builds depend on Fabric's compiler artifacts
 
+### Plain-language explanation
+
+Gap #6 is fundamentally about Fabric lacking a supported, stable build boundary for external plug-ins.
+
+Today, `FabricMLSDNode` cannot simply declare:
+
+```swift
+.package(url: ".../Fabric.git", ...)
+.product(name: "FabricPluginAPI", package: "Fabric")
+```
+
+and let SwiftPM handle everything. Instead, the plug-in imports Fabric’s full Swift module from an adjacent checkout and depends on Fabric’s internal build artifacts.
+
+That creates several problems:
+
+- Swift modules are compiler-specific. A Fabric module built by a different Xcode/Swift version can fail to import.
+- Debug and Release artifacts are different and must match the plug-in configuration.
+- The current plug-in build needs paths inside SwiftPM’s scratch directory, which is an implementation detail rather than a supported API.
+- Xcode 27’s default SwiftPM build system did not produce the module-map layout the external plug-in expected.
+- Building the whole Fabric package can copy or expose resources and frameworks that a plug-in neither uses nor should embed.
+- A clean checkout, CI machine, or future SwiftPM release could change these paths and break the build even though the plug-in source remains valid.
+
+Our workaround is to build Fabric first in a private scratch directory:
+
+```text
+FabricMLSDNode/.fabric-spm/
+```
+
+using SwiftPM’s native build system, then point the plug-in compiler and linker at that exact configuration’s outputs. This avoids stale artifacts from Fabric’s own `.build` directory, but it is still coupled to SwiftPM’s internal output layout.
+
+#### What issue #308 covers
+
+[#308](https://github.com/Fabric-Project/Fabric/issues/308) proposes a separate Fabric plug-in target to avoid copying unnecessary SwiftPM resources and embedded frameworks. That is useful, and a `FabricPluginAPI` target could become the right solution vehicle.
+
+But the issue currently addresses packaging cleanliness, not the entire gap. It does not explicitly cover:
+
+- Compiler-version compatibility
+- Debug/Release matching
+- Module-map and linker-path stability
+- Architecture matching
+- A supported public API product
+- CI and command-line plug-in builds
+- Compatibility between the compiled plug-in and the host’s API version
+
+#### A stronger upstream solution
+
+Ideally Fabric would publish a narrowly scoped product such as:
+
+```swift
+.library(
+    name: "FabricPluginAPI",
+    targets: ["FabricPluginAPI"]
+)
+```
+
+That target would expose only what external nodes require:
+
+- `Node` and supported base-node classes
+- Ports, parameters, and port-value contracts
+- `GraphRenderer` execution interfaces
+- `FabricImage`
+- Plug-in discovery and registration types
+- Public error and lifecycle APIs
+- Necessary Satin/Metal-facing types
+
+It should avoid depending on the Editor, samples, app resources, ML models, bundled shaders, or unrelated frameworks.
+
+A satisfactory solution would let a plug-in:
+
+1. Declare the API product as a normal dependency.
+2. Build using the plug-in’s active compiler, architecture, and configuration.
+3. Avoid manually searching `.build` directories.
+4. Avoid embedding Fabric’s resources or implementation frameworks.
+5. Verify compatibility using `FabricPluginAPIVersion`.
+6. Build reproducibly in Xcode and CI from a clean checkout.
+
+If Fabric wants to distribute a precompiled SDK instead, it would need stable `.swiftinterface` files or an XCFramework built for library evolution. Building the API target from source through SwiftPM is probably simpler while Fabric is changing rapidly.
+
+So I would expand #308 rather than immediately opening a duplicate—provided its owner agrees that it should cover the whole supported plug-in build surface. Otherwise, #308 can stay focused on resource embedding, with a linked issue titled something like:
+
+> Provide a stable FabricPluginAPI build product for external plug-ins
+
+### Technical record and acceptance criteria
+
 **Observed constraint:** The plug-in imports Fabric as a Swift module from an
 adjacent checkout. Using Fabric's existing `.build` tree failed when that tree
 contained module artifacts from a different compiler. Under Xcode 27, the
