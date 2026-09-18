@@ -17,13 +17,15 @@ The resulting Fabric plug-in is explicitly self-contained: MESS is migration pro
 
 ## Selected Bounded Milestone
 
-Record Fabric's non-configurable canvas node width in `docs/FABRIC_INTEGRATION_GAPS.md` as an upstream wishlist item. Cite the observed sizing/layout code, the M-LSD label-collision workaround, and a host API direction that keeps node dimensions and graph layout in sync.
+Embed the user-supplied `FabricScenes/MLSDExample.jpg` Fabric Editor screenshot in the repository README as an example of the current node chain and rendered line overlay. Preserve the image bytes and leave the user's untracked `.fabric` scene and source photo untouched.
 
-Definition of done: the document clearly separates the observed constraint, local workaround, and proposed Fabric capability; no Fabric or plug-in runtime source changes. Verify the documentation diff and commit/push with the user's standing authorization.
+Definition of done: the README uses a working relative image path, the screenshot is included in version control, the documentation diff is clean, and the result is committed/pushed with the user's standing authorization. No plug-in build is needed for a README-only change.
 
-Non-goals: implementing a Fabric layout change, revisiting the shortened labels, or authoring `.fabric` scenes.
+Non-goals: editing the screenshot, changing the scene, committing the source photo, or changing plug-in/Fabric code.
 
 ## Milestone Status
+
+README screenshot stage: `FabricScenes/MLSDExample.jpg` was inspected visually; it shows the user-authored Image Provider → analysis → overlay → Image Mesh chain and visible city-line output in Fabric Editor. README now embeds it by a verified relative path. `git diff --check` passes. The screenshot bytes are unchanged; the user's `.fabric` scene and source JPEG remain untracked and untouched. Pending commit/push. A still screenshot is evidence of rendering, not cadence or deterministic-export validation.
 
 The node-width wishlist entry is section 7 of `docs/FABRIC_INTEGRATION_GAPS.md`. It records the 150-point default for all-horizontal-port nodes, the M-LSD label workaround, and a preferred/minimum or content-aware width API that would keep canvas layout consistent. Scoped documentation review and `git diff --check` pass. No source code or bundle changed. Committed and pushed at `979a260`.
 
@@ -78,11 +80,11 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Unresolved Concerns
 
-- Live Fabric Editor validation still requires restarting the app after installation and will be performed after the node builds; the user will create the sample scenes.
+- The user-authored screenshot shows line rendering in Fabric Editor; live cadence and deterministic export have not been validated from that still capture.
 - Fabric has no same-frame barrier for asynchronous GPU-to-CPU analysis during deterministic export. The first node will explicitly support bounded latest-frame interactive analysis; the limitation and possible host APIs are recorded in `docs/FABRIC_INTEGRATION_GAPS.md`.
 - The later MESS migration must be handled as a separate cross-repository milestone.
-- The user will author the `.fabric` sample scenes after the node contracts stabilize. `FabricScenes/README.md` records the intended direct-overlay and independent-analysis scenarios; Codex should not create placeholder scene files.
+- The user has authored `FabricScenes/MLSDExample.fabric` and `FabricScenes/DubaiTestImage.jpg`, both currently untracked and outside this README-image milestone. `FabricScenes/README.md` records the intended direct-overlay and independent-analysis scenarios; Codex should not create placeholder scene files.
 
 ## Next Exact Action
 
-Await the user's live visual check of the shortened labels and existing scene connections. Do not author their `.fabric` scenes. If the Fabric API proposal is requested upstream, use section 7 as the starting point rather than modifying Fabric speculatively.
+Add the user-supplied screenshot to the README, verify its relative path and the scoped diff, then commit/push README, screenshot, and handoff only. Preserve the untracked scene and source photo.

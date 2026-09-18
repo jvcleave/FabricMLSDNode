@@ -23,6 +23,14 @@ Current Fabric constraints, the plug-in's local adaptations, and candidate
 host API improvements are tracked in
 [`docs/FABRIC_INTEGRATION_GAPS.md`](docs/FABRIC_INTEGRATION_GAPS.md).
 
+## Example
+
+The user-authored Fabric scene connects an Image Provider to `M-LSD Analyze`,
+passes its `Frame`, `Lines`, and `Scores` to `M-LSD Overlay`, and displays the
+result with Image Mesh.
+
+![M-LSD structural lines over a Dubai city image in Fabric Editor](FabricScenes/MLSDExample.jpg)
+
 ## Development layout
 
 The default local layout is:
