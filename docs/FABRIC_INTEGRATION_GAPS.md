@@ -218,6 +218,30 @@ Add a transition test covering nonempty → empty → nonempty arrays for Point
 and Line primitives. This is likely a host-node correctness fix rather than a
 new plug-in API.
 
+## Existing Fabric GitHub issue coverage
+
+Reviewed against the Fabric issue tracker on 2026-09-18. “Partial” means the
+existing issue provides an appropriate discussion venue but does not yet state
+the complete contract proposed above.
+
+| Gap | Existing issue coverage | Assessment and next action |
+| --- | --- | --- |
+| 1. Domain-specific plug-in value types | [#296 Node Typification II](https://github.com/Fabric-Project/Fabric/issues/296) | **Related, not equivalent.** It covers unbounded type declarations and typed/virtual UX, but not external registration of a stable, serializable plug-in value. Open a focused issue or explicitly expand #296 before treating this gap as tracked. |
+| 2. Thread-safe async invalidation | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247); closed [#336 async inference texture lifetime](https://github.com/Fabric-Project/Fabric/issues/336) | **Partial.** #247 is the right umbrella for async nodes, while #336 confirms a related resource-lifetime hazard. Neither defines a thread-safe graph-owned invalidation boundary ordered against `markClean()`. Propose that contract on #247. |
+| 3. GPU-dependent CPU analysis scheduling | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247); [#155 FabricImage frame-time metadata](https://github.com/Fabric-Project/Fabric/issues/155) | **Strong conceptual coverage.** #247 explicitly includes ML inference and GraphRenderer-controlled async/sync modes; #155 is useful for source-frame provenance. Add the GPU-completion continuation, cancellation, latest-pending, and frame-token requirements to #247. |
+| 4. Deterministic export awaiting async work | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247) | **Strong conceptual coverage, incomplete contract.** Its realtime/async versus offline/sync distinction is the right home, but it does not yet define an export settle barrier or affected-downstream reevaluation. Extend #247 rather than opening a duplicate. |
+| 5. Independent Processor cadence | None found | **Untracked.** Open a focused issue for future-frame/time/token evaluation requests that preserve Processor semantics and cancel with node lifecycle. |
+| 6. Supported plug-in build surface | [#308 SwiftPM embeds resources not needed for plugins](https://github.com/Fabric-Project/Fabric/issues/308) | **Partial.** Its proposed Fabric Plugin target addresses redundant resources, but not compiler-version artifacts, module-map layout, configuration matching, or a stable SDK/build helper. Expand #308 if one plug-in build epic is desired; otherwise open a narrower SDK/tooling issue linked to it. |
+| 7. Configurable canvas-node width | Closed [#110 Node title legibility](https://github.com/Fabric-Project/Fabric/issues/110); closed [#221 Layout issues](https://github.com/Fabric-Project/Fabric/issues/221) | **Adjacent only.** Neither supplies a plug-in preferred/minimum width or content-aware port-label layout contract. Open a focused editor/API issue. |
+| 8. Geometry Compose empty-array clearing | [#265 Line Geometry Node](https://github.com/Fabric-Project/Fabric/issues/265) is adjacent only | **Untracked.** #265 concerns generating thick line geometry, not clearing composed geometry. After reproducing the nonempty → empty transition live, open a focused Geometry Compose correctness issue with a transition test. |
+
+The most efficient upstream path is therefore to consolidate gaps 2–4 on
+[#247](https://github.com/Fabric-Project/Fabric/issues/247), add the missing
+plug-in build requirements to [#308](https://github.com/Fabric-Project/Fabric/issues/308),
+and file focused issues for gaps 5 and 7. Gap 8 should wait for the planned live
+transition reproduction. Gap 1 needs an explicit decision from the #296 owners
+on whether plug-in-defined serialized values belong within that issue's scope.
+
 ## Proposal priorities
 
 The highest-value changes are thread-safe invalidation and deterministic async
