@@ -2,7 +2,7 @@
 
 - Updated: 2026-09-18
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
-- Latest documentation commit on `main`: `ea57ec5` (`Add plain-language plugin build explanation`), pushed to `origin/main`
+- Latest documentation commit on `main`: `47bc8e4` (`Document M-LSD node port contracts`), pushed to `origin/main`
 - Latest sample commit on `main`: `c7a82b1` (`Add M-LSD geometry example`)
 - Latest implementation commit on `main`: `981c5a2` (`Add planar M-LSD positions node`)
 - Prior points/geometry planning checkpoint: `1d10ef7`
@@ -37,7 +37,7 @@ Gap-6 elaboration is complete, committed, and pushed at `7aa92e5`. The integrati
 
 Gap-6 plain-language documentation is complete, committed, and pushed at `ea57ec5`. At the user's request, the clearer prior response is included as a dedicated plain-language subsection without rewriting its substantive wording; only its circular local-file link is omitted. The existing technical record and acceptance criteria remain below it. `git diff --check` passed; this documentation-only change required no build. The user-modified geometry scene remains unstaged.
 
-README node-port tables are active. A new port-reference section derives directly from the three registered node contracts and records every visible input/output, Fabric type, default/range or connection requirement, and important semantics. It explicitly documents paired frame outputs, optional aligned scores, bottom-left normalized `Vector4` lines, the required Size input for nonempty planar conversion, two ordered `Vector3` positions per line, and `z = 0` rather than recovered depth. The user-modified geometry scene must remain unstaged. This documentation-only change requires no build.
+README node-port tables are complete, committed, and pushed at `47bc8e4`. The port-reference section derives directly from the three registered node contracts and records every visible input/output, Fabric type, default/range or connection requirement, and important semantics. It explicitly documents paired frame outputs, optional aligned scores, bottom-left normalized `Vector4` lines, the required Size input for nonempty planar conversion, two ordered `Vector3` positions per line, and `z = 0` rather than recovered depth. `git diff --check` passed; this documentation-only change required no build. The user-modified geometry scene remains unstaged.
 
 Example-publication stage: the user-authored scene JSON parses, declares plug-in version 1.0, and contains the intended Image Provider → analysis → overlay → Image Mesh chain with five active connections. Its only file dependency is the included `DubaiTestImage.jpg`. The scene and source image bytes remain unchanged. README and `FabricScenes/README.md` link the files and explain the required one-time `File Path` relink after cloning; `git diff --check` passes. The source JPEG has no indexed GPS or camera make/model metadata. Committed and pushed at `a0d33a8`; no plug-in build was run because runtime source is untouched.
 
