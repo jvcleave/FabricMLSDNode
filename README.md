@@ -24,6 +24,52 @@ Current Fabric constraints, the plug-in's local adaptations, and candidate
 host API improvements are tracked in
 [`docs/FABRIC_INTEGRATION_GAPS.md`](docs/FABRIC_INTEGRATION_GAPS.md).
 
+## Node port reference
+
+### M-LSD Analyze
+
+Runs M-LSD 512-tiny asynchronously and publishes the latest completed analysis.
+
+| Port | Direction | Fabric type | Default or requirement | Description |
+| --- | --- | --- | --- | --- |
+| `Image` | Input | `Image` | Required | Image to analyze in its Fabric presentation orientation. |
+| `Min Score` | Input | `Float` | `0.05`; range `0...1` | Minimum model confidence required to retain a line. |
+| `Max Lines` | Input | `Int` | `200`; range `1...200` | Maximum number of highest-confidence lines to publish. |
+| `Interval` | Input | `Int` | `1`; range `1...120` | Analyze every Nth changed input image; parameter changes analyze immediately. |
+| `Lines` | Output | `Array<Vector4>` | Up to 200 values | Each value is `[startX, startY, endX, endY]` in normalized bottom-left coordinates. |
+| `Scores` | Output | `Array<Float>` | One value per `Lines` element | Confidence values index-aligned with `Lines`. |
+| `Count` | Output | `Int` | — | Number of lines in the latest completed analysis. |
+| `Size` | Output | `Vector2` | — | Presentation width and height of the analyzed image. |
+| `Frame` | Output | `Image` | — | Source image paired with the completed `Lines`, `Scores`, and `Size` result. |
+
+### M-LSD Overlay
+
+Draws compatible normalized line segments over an image without running
+inference.
+
+| Port | Direction | Fabric type | Default or requirement | Description |
+| --- | --- | --- | --- | --- |
+| `Image` | Input | `Image` | Required | Background image. Connect Analyze `Frame` for frame-aligned results. |
+| `Lines` | Input | `Array<Vector4>` | Empty allowed; maximum 200 | Normalized bottom-left `[startX, startY, endX, endY]` segments. |
+| `Scores` | Input | `Array<Float>` | Optional | Confidence values aligned one-to-one with `Lines`; omitted values are treated as confidence 1. |
+| `Color` | Input | `Vector4` color | Cyan `(0, 1, 1, 1)` | Overlay line color and alpha. |
+| `Width` | Input | `Float` | `2`; range `0.5...32` | Line width in presentation pixels. |
+| `Opacity` | Input | `Float` | `1`; range `0...1` | Multiplier applied to the color alpha. |
+| `Min Score` | Input | `Float` | `0`; range `0...1` | Draw only lines meeting this score; meaningful when aligned `Scores` are connected. |
+| `Image` | Output | `Image` | RGBA16-float | Source image with anti-aliased structural lines, or the unchanged source when no lines are visible. |
+
+### M-LSD Positions
+
+Converts the normalized 2D line contract into planar positions that Fabric can
+feed to geometry nodes.
+
+| Port | Direction | Fabric type | Default or requirement | Description |
+| --- | --- | --- | --- | --- |
+| `Lines` | Input | `Array<Vector4>` | Empty allowed; maximum 200 | Normalized bottom-left line segments from Analyze or a compatible producer. |
+| `Size` | Input | `Vector2` | Required when `Lines` is nonempty | Presentation width and height used to preserve the source aspect ratio. |
+| `Width` | Input | `Float` | `1`; range `0.001...1000` | Width of the centered XY plane in world units. |
+| `Positions` | Output | `Array<Vector3>` | Two values per line | Ordered start/end pairs on an aspect-correct XY plane. Every position has `z = 0`; no depth or shared topology is inferred. |
+
 ## Overlay example
 
 The user-authored [MLSDExample.fabric](FabricScenes/MLSDExample.fabric) scene
