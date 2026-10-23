@@ -33,12 +33,13 @@ official TFLite artifact adds an unused alpha channel whose convolution weights
 are zero; the Core ML conversion removes that channel without changing RGB
 results.
 
-NMS and top-200 selection are already inside the model. Outputs are:
+NMS and top-1,000 selection are inside the shipping model. The original
+top-200 research artifact is retained unchanged. Shipping outputs are:
 
 | Output | Runtime shape | Meaning |
 | --- | --- | --- |
-| `center_points` | `1 x 200 x 2` | integer-valued `[y, x]` centers on a 256 x 256 map |
-| `center_scores` | `1 x 200` | sigmoid center confidence, descending |
+| `center_points` | `1 x 1000 x 2` | integer-valued `[y, x]` centers on a 256 x 256 map |
+| `center_scores` | `1 x 1000` | sigmoid center confidence, descending |
 | `displacement_map` | `1 x 256 x 256 x 4` | `[dx0, dy0, dx1, dy1]` at every map cell |
 
 The remaining line decoder is small: for each selected center, read its four
@@ -70,7 +71,7 @@ of the city structure, while 512 large adds no useful lines at roughly five
 times the CPU cost. The FP32 source artifact was retained to give conversion
 parity an unambiguous reference.
 
-## Core ML conversion
+## Original top-200 Core ML conversion
 
 `Conversion/convert_mlsd_to_coreml.py` reconstructs the official graph from the
 pinned checkpoint under TensorFlow 2.12.0 and converts it with Core ML Tools
@@ -109,3 +110,40 @@ selected endpoints, score-threshold counts, and Core ML CPU parity for the
 existing city and sky-control images. At score `0.05`, 46 city segments and
 three sky-control segments remain. Lowering the city threshold to `0.025`
 retains 76 segments; `0.01` retains 104. The preview uses the 46-line setting.
+
+## Shipping top-1,000 export (2026-10-23)
+
+The shipping export uses the same accepted 512-tiny backbone and changes only
+the single post-NMS TopK operator's `K` from 200 to 1,000 plus descriptive
+metadata. It retains legacy `neuralNetwork` specification version 5, the
+512×512 RGB stretch, normalization, learned weights, displacement map, and
+minimum displacement length 20. No retraining or MESS dependency is introduced.
+
+| Artifact | Role | SHA-256 |
+| --- | --- | --- |
+| `Models/mlsd_512_tiny.mlmodel` | Unchanged top-200 research baseline | `3394446fabb834545a11f7445965ed31ffc43e3d1a5d4c19a00bbeeca7c804f3` |
+| `Models/mlsd_512_tiny_top1000.mlmodel` | Top-1,000 research export; identical bytes ship under the production `mlsd_512_tiny.mlmodel` name | `e23a999f4d3ba993a667afacb399d8193ce1bb0d4853087153287fa2780234cd` |
+
+`Conversion/export_candidate_variant.py` requires Core ML Tools 9.0. It pins
+the baseline hash and verifies exact graph equality after restoring TopK and
+metadata; deterministic protobuf serialization makes repeated exports match.
+See `BUILDING_MODEL_VARIANTS.md` in the repository root for complete commands.
+The original TensorFlow converter also accepts `--topk 200|500|1000` for
+independent source regeneration (default 1000).
+
+`Reference/top1000-parity.json` records CPU comparison and local inference
+timings on the city and sky-control fixtures using the same OpenCV INTER_AREA
+input as the original reference. The first 200 centers and scores, and the
+entire displacement map, match the accepted baseline exactly on both images.
+At score 0.05, the CPU city count remains 46. At score 0.01 it rises from 104
+to 122; at 0.001 from 104 to 205, demonstrating accepted detections beyond
+200. At threshold zero it yields 549 city segments and 661 sky-control
+segments, illustrating why a larger candidate pool still needs score filtering.
+
+On this M1 Max / macOS 27 / Xcode 27 run, median warm top-1,000 prediction
+was approximately 38.6 ms CPU and 5.6 ms CPU/GPU on the city fixture (four
+predictions after one first prediction; loading, preprocessing, decoding and
+rendering excluded). These are local measurements, not a loaded Fabric
+playback guarantee. CPU/GPU gives 47 city lines at 0.05; reduced-precision
+differences near thresholds remain expected. Original top-200 TFLite reference
+JSON and preview remain unchanged and are historical baseline evidence.

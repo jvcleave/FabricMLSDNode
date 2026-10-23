@@ -5,7 +5,7 @@ enum MLSDModelResource
 {
     private static let modelName = "mlsd_512_tiny"
     private static let expectedHash =
-        "3394446fabb834545a11f7445965ed31ffc43e3d1a5d4c19a00bbeeca7c804f3"
+        "e23a999f4d3ba993a667afacb399d8193ce1bb0d4853087153287fa2780234cd"
     private static let expectedLicenseHash =
         "b8a6637c19443e6792ce93c37fe1faac3c745e319ffcd90ac8be0a170a9a1900"
 

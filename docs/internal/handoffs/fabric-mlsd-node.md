@@ -1,6 +1,6 @@
 # Codex Handoff: Fabric M-LSD Node
 
-- Updated: 2026-09-18
+- Updated: 2026-10-23
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Latest documentation commit on `main`: `47bc8e4` (`Document M-LSD node port contracts`), pushed to `origin/main`
 - Latest sample commit on `main`: `c7a82b1` (`Add M-LSD geometry example`)
@@ -18,6 +18,11 @@ The package-migration milestone is committed and pushed on `main` at `3b6b24c`. 
 The resulting Fabric plug-in is explicitly self-contained: MESS is migration provenance only, not a build-time or runtime dependency. This repository must not import, link, reference, or require any MESS-owned target. Any later MESS adoption points from MESS to this package, never from this repository back to MESS.
 
 ## Selected Bounded Milestone
+
+The current milestone is the 1,000-line upgrade. Resume from
+`docs/internal/handoffs/mlsd-1000-lines.md` for its decisions, verification,
+artifact hash, dirty-work constraints, and next action. The positions milestone
+below is retained as historical implementation context.
 
 Implement `M-LSD Positions` as a separate, planar adapter for the existing scored 2D-segment output. Keep analysis and overlay contracts unchanged. Do not author or alter a Fabric scene in this milestone.
 
@@ -113,4 +118,6 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Test a nonempty → empty → nonempty live geometry transition. If Geometry Compose retains stale vertices, decide whether to propose the focused Fabric fix or implement a dedicated plug-in geometry node. Live cadence and deterministic export remain separate checks.
+Complete the 1,000-line upgrade using `docs/internal/handoffs/mlsd-1000-lines.md`.
+The previously planned nonempty → empty → nonempty live geometry transition,
+cadence, and deterministic export checks remain separate follow-up work.

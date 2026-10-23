@@ -1,0 +1,82 @@
+{
+  "baseline_sha256": "3394446fabb834545a11f7445965ed31ffc43e3d1a5d4c19a00bbeeca7c804f3",
+  "candidate_sha256": "e23a999f4d3ba993a667afacb399d8193ce1bb0d4853087153287fa2780234cd",
+  "fixtures": {
+    "city-28s.png": {
+      "baseline_counts": {
+        "0": 104,
+        "0.001": 104,
+        "0.01": 104,
+        "0.025": 76,
+        "0.05": 46,
+        "0.1": 28,
+        "0.2": 15,
+        "0.5": 3
+      },
+      "baseline_cpu_warm_ms": 40.91606242582202,
+      "candidate_cpu_and_gpu_warm_ms": 5.63508365303278,
+      "candidate_cpu_counts": {
+        "0": 549,
+        "0.001": 205,
+        "0.01": 122,
+        "0.025": 76,
+        "0.05": 46,
+        "0.1": 28,
+        "0.2": 15,
+        "0.5": 3
+      },
+      "candidate_cpu_warm_ms": 38.6058334261179,
+      "candidate_gpu_counts": {
+        "0": 760,
+        "0.001": 207,
+        "0.01": 123,
+        "0.025": 75,
+        "0.05": 47,
+        "0.1": 28,
+        "0.2": 15,
+        "0.5": 3
+      },
+      "first_200_centers_and_scores_exact": true,
+      "whole_displacement_map_exact": true
+    },
+    "city-sky-control-18s.png": {
+      "baseline_counts": {
+        "0": 163,
+        "0.001": 24,
+        "0.01": 6,
+        "0.025": 6,
+        "0.05": 3,
+        "0.1": 2,
+        "0.2": 2,
+        "0.5": 1
+      },
+      "baseline_cpu_warm_ms": 39.277666015550494,
+      "candidate_cpu_and_gpu_warm_ms": 5.682771094143391,
+      "candidate_cpu_counts": {
+        "0": 661,
+        "0.001": 24,
+        "0.01": 6,
+        "0.025": 6,
+        "0.05": 3,
+        "0.1": 2,
+        "0.2": 2,
+        "0.5": 1
+      },
+      "candidate_cpu_warm_ms": 38.35924994200468,
+      "candidate_gpu_counts": {
+        "0": 851,
+        "0.001": 27,
+        "0.01": 7,
+        "0.025": 5,
+        "0.05": 3,
+        "0.1": 2,
+        "0.2": 1,
+        "0.5": 1
+      },
+      "first_200_centers_and_scores_exact": true,
+      "whole_displacement_map_exact": true
+    }
+  },
+  "preprocessing": "OpenCV INTER_AREA RGB 512x512, matching the official reference generator",
+  "timings": "Median of four warm predictions after one first prediction; model loading excluded"
+}

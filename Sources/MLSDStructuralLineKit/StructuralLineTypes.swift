@@ -53,11 +53,11 @@ public struct StructuralLineEdge: Sendable, Equatable
 
 public struct StructuralLineLimits: Sendable, Equatable
 {
-    /// M-LSD emits at most 200 independent segments. Each segment deliberately
+    /// The shipping export emits at most 1,000 independent segments. Each segment deliberately
     /// owns two junctions because the model does not infer shared topology.
     public static let mlsd512Tiny = StructuralLineLimits(
-        uncheckedMaximumJunctions: 400,
-        maximumEdges: 200
+        uncheckedMaximumJunctions: 2_000,
+        maximumEdges: 1_000
     )
 
     public let maximumJunctions: Int

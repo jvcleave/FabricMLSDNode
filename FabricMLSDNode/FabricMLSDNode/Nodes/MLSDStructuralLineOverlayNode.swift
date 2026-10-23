@@ -1,5 +1,6 @@
 import Fabric
 import Foundation
+import MLSDStructuralLineKit
 import Metal
 import Satin
 import simd
@@ -178,9 +179,10 @@ public final class MLSDStructuralLineOverlayNode: Node
         confidences: ContiguousArray<Float>?
     ) throws
     {
-        guard segments.count <= 200 else
+        let lineLimit = StructuralLineLimits.mlsd512Tiny.maximumEdges
+        guard segments.count <= lineLimit else
         {
-            throw Self.overlayError("M-LSD overlay accepts at most 200 line segments.")
+            throw Self.overlayError("M-LSD overlay accepts at most \(lineLimit) line segments.")
         }
         if let confidences, confidences.count != segments.count
         {
@@ -235,6 +237,23 @@ public final class MLSDStructuralLineOverlayNode: Node
         commandBuffer: MTLCommandBuffer
     ) throws
     {
+        // A 1,000-segment array is 16 KB, beyond Metal's 4 KB inline-bytes limit.
+        // Give each encoded draw its own buffer so subsequent graph passes cannot
+        // overwrite data still being consumed by the GPU.
+        let segmentBuffer = try segments.withUnsafeBufferPointer { buffer in
+            guard let baseAddress = buffer.baseAddress,
+                  let segmentBuffer = self.context.device.makeBuffer(
+                      bytes: baseAddress,
+                      length: buffer.count * MemoryLayout<SIMD4<Float>>.stride,
+                      options: .storageModeShared
+                  )
+            else
+            {
+                throw Self.overlayError("Could not allocate the M-LSD line vertex buffer.")
+            }
+            return segmentBuffer
+        }
+        segmentBuffer.label = "M-LSD Line Segments"
         let descriptor = MTLRenderPassDescriptor()
         descriptor.colorAttachments[0].texture = destination
         descriptor.colorAttachments[0].loadAction = .load
@@ -250,16 +269,13 @@ public final class MLSDStructuralLineOverlayNode: Node
         var size = presentationSize
         var lineWidth = width
         var lineColor = color
-        segments.withUnsafeBufferPointer { buffer in
-            guard let baseAddress = buffer.baseAddress else { return }
-            encoder.setVertexBytes(baseAddress, length: buffer.count * MemoryLayout<SIMD4<Float>>.stride, index: 0)
-            encoder.setVertexBytes(&textureTransform, length: MemoryLayout<simd_float4x4>.stride, index: 1)
-            encoder.setVertexBytes(&size, length: MemoryLayout<simd_float2>.stride, index: 2)
-            encoder.setVertexBytes(&lineWidth, length: MemoryLayout<Float>.stride, index: 3)
-            encoder.setFragmentBytes(&lineColor, length: MemoryLayout<simd_float4>.stride, index: 0)
-            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6,
-                instanceCount: buffer.count)
-        }
+        encoder.setVertexBuffer(segmentBuffer, offset: 0, index: 0)
+        encoder.setVertexBytes(&textureTransform, length: MemoryLayout<simd_float4x4>.stride, index: 1)
+        encoder.setVertexBytes(&size, length: MemoryLayout<simd_float2>.stride, index: 2)
+        encoder.setVertexBytes(&lineWidth, length: MemoryLayout<Float>.stride, index: 3)
+        encoder.setFragmentBytes(&lineColor, length: MemoryLayout<simd_float4>.stride, index: 0)
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6,
+            instanceCount: segments.count)
     }
 
     private static func overlayError(_ message: String) -> FabricError

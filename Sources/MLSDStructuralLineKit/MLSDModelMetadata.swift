@@ -6,8 +6,8 @@ enum MLSDModelMetadata
     static let inputWidth = 512
     static let inputHeight = 512
     static let outputShapes: [String: [Int]] = [
-        "center_points": [1, 200, 2],
-        "center_scores": [1, 200],
+        "center_points": [1, StructuralLineLimits.mlsd512Tiny.maximumEdges, 2],
+        "center_scores": [1, StructuralLineLimits.mlsd512Tiny.maximumEdges],
         "displacement_map": [1, 256, 256, 4],
     ]
 

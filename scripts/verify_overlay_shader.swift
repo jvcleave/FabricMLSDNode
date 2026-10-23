@@ -74,17 +74,26 @@ func render(transform: simd_float4x4, expectedLineColumn: Int, expectedLineRow: 
     pass.colorAttachments[0].storeAction = .store
     let encoder = try require(commandBuffer.makeRenderCommandEncoder(descriptor: pass), "No render encoder")
     encoder.setRenderPipelineState(linePipeline)
-    var segment = SIMD4<Float>(0.25, 0.25, 0.75, 0.25)
+    var segments = [SIMD4<Float>](repeating: SIMD4(0, 0, 0.05, 0), count: 1000)
+    // Only the final instance crosses the inspected pixel. A truncated draw or
+    // a too-small inline upload therefore fails independently of array length.
+    segments[999] = SIMD4<Float>(0.25, 0.25, 0.75, 0.25)
+    let segmentBuffer = try segments.withUnsafeBufferPointer { buffer in
+        let baseAddress = try require(buffer.baseAddress, "No line data")
+        return try require(device.makeBuffer(bytes: baseAddress,
+            length: buffer.count * MemoryLayout<SIMD4<Float>>.stride,
+            options: .storageModeShared), "No line vertex buffer")
+    }
     var storedTransform = transform
     var presentationSize = SIMD2<Float>(16, 16)
     var width: Float = 2
     var color = SIMD4<Float>(1, 0, 0, 1)
-    encoder.setVertexBytes(&segment, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
+    encoder.setVertexBuffer(segmentBuffer, offset: 0, index: 0)
     encoder.setVertexBytes(&storedTransform, length: MemoryLayout<simd_float4x4>.stride, index: 1)
     encoder.setVertexBytes(&presentationSize, length: MemoryLayout<SIMD2<Float>>.stride, index: 2)
     encoder.setVertexBytes(&width, length: MemoryLayout<Float>.stride, index: 3)
     encoder.setFragmentBytes(&color, length: MemoryLayout<SIMD4<Float>>.stride, index: 0)
-    encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
+    encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6, instanceCount: segments.count)
     encoder.endEncoding()
     commandBuffer.commit()
     commandBuffer.waitUntilCompleted()
@@ -119,4 +128,4 @@ quarterTurn.columns.0 = SIMD4<Float>(0, -1, 0, 0)
 quarterTurn.columns.1 = SIMD4<Float>(1, 0, 0, 0)
 quarterTurn.columns.3 = SIMD4<Float>(0, 1, 0, 1)
 try render(transform: quarterTurn, expectedLineColumn: 12, expectedLineRow: 8)
-print("M-LSD overlay Metal fixture passed: identity, vertical-flip, and quarter-turn orientation; background copy and line compositing")
+print("M-LSD overlay Metal fixture passed: 1,000 segments, final-instance rendering, identity/vertical-flip/quarter-turn orientation, background copy and line compositing")

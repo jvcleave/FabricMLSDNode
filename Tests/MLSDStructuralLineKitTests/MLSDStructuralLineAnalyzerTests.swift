@@ -18,8 +18,8 @@ struct MLSDStructuralLineAnalyzerTests
     @Test("Decoder preserves independent segments and normalized coordinates")
     func decodesIndependentSegments() throws
     {
-        let points = try MLMultiArray(shape: [1, 200, 2], dataType: .float32)
-        let scores = try MLMultiArray(shape: [1, 200], dataType: .float32)
+        let points = try MLMultiArray(shape: [1, 1000, 2], dataType: .float32)
+        let scores = try MLMultiArray(shape: [1, 1000], dataType: .float32)
         let displacements = try MLMultiArray(
             shape: [1, 256, 256, 4],
             dataType: .float32
@@ -46,6 +46,56 @@ struct MLSDStructuralLineAnalyzerTests
         #expect(frame.junctions[0].position == SIMD2(0.078125, 0.609375))
         #expect(frame.junctions[1].position == SIMD2(0.3125, 0.609375))
         #expect(frame.edges[0].confidence == 0.9)
+    }
+
+    @Test("Decoder retains 1,000 endpoint pairs and honors a selected cap above 200")
+    func decodesThousandCandidates() throws
+    {
+        let points = try MLMultiArray(shape: [1, 1000, 2], dataType: .float32)
+        let scores = try MLMultiArray(shape: [1, 1000], dataType: .float32)
+        let displacements = try MLMultiArray(shape: [1, 256, 256, 4], dataType: .float32)
+        for index in 0 ..< 1000
+        {
+            let centerY = index / 256 + 100
+            let centerX = index % 256
+            self.set(points, [0, index, 0], Float(centerY))
+            self.set(points, [0, index, 1], Float(centerX))
+            self.set(scores, [0, index], 0.9)
+            self.set(displacements, [0, centerY, centerX, 0], -30)
+            self.set(displacements, [0, centerY, centerX, 1], 0)
+            self.set(displacements, [0, centerY, centerX, 2], 30)
+            self.set(displacements, [0, centerY, centerX, 3], 0)
+        }
+        let decoder = MLSDDecoder()
+        let sourceSize = StructuralLineImageSize(width: 1280, height: 720)
+        let full = try decoder.decode(
+            centerPoints: points, centerScores: scores,
+            displacementMap: displacements, sourceSize: sourceSize
+        )
+        #expect(full.edges.count == 1000)
+        #expect(full.junctions.count == 2000)
+        #expect(full.edges.last?.startJunctionIndex == 1998)
+        #expect(full.edges.last?.endJunctionIndex == 1999)
+
+        let capped = try decoder.decode(
+            centerPoints: points, centerScores: scores,
+            displacementMap: displacements, sourceSize: sourceSize,
+            configuration: MLSDDecoderConfiguration(maximumEdges: 321)
+        )
+        #expect(capped.edges == Array(full.edges.prefix(321)))
+        #expect(capped.junctions == Array(full.junctions.prefix(642)))
+        #expect(throws: MLSDDecoderConfigurationError.invalidMaximumEdges)
+        {
+            try MLSDDecoderConfiguration(maximumEdges: 1001)
+        }
+        let legacyPoints = try MLMultiArray(shape: [1, 200, 2], dataType: .float32)
+        #expect(throws: MLSDStructuralLineError.self)
+        {
+            try decoder.decode(
+                centerPoints: legacyPoints, centerScores: scores,
+                displacementMap: displacements, sourceSize: sourceSize
+            )
+        }
     }
 
     @Test("CPU model and Swift decoder reproduce the pinned city reference")
@@ -91,6 +141,16 @@ struct MLSDStructuralLineAnalyzerTests
         #expect(abs(firstStart.y - (1 - 217.775921 / 720)) < 0.0001)
         #expect(abs(firstEnd.x - 495.932437 / 1_280) < 0.0001)
         #expect(abs(firstEnd.y - (1 - 467.799193 / 720)) < 0.0001)
+
+        let lowThresholdFrame = try analyzer.analyze(
+            texture: texture,
+            sourceSize: StructuralLineImageSize(width: 1_280, height: 720),
+            commandQueue: commandQueue,
+            decoderConfiguration: MLSDDecoderConfiguration(minimumConfidence: 0)
+        )
+        #expect(lowThresholdFrame.edges.count > 200)
+        #expect(lowThresholdFrame.edges.count <= 1000)
+        #expect(lowThresholdFrame.junctions.count == lowThresholdFrame.edges.count * 2)
 
         let gpuConfiguration = MLModelConfiguration()
         gpuConfiguration.computeUnits = .cpuAndGPU

@@ -13,6 +13,8 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mlsd-repository", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--topk", type=int, choices=[200, 500, 1000], default=1000,
+                        help="post-NMS candidate count (default: %(default)s)")
     parser.add_argument(
         "--variant",
         choices=variant_names(),
@@ -72,7 +74,7 @@ def main() -> None:
         residual_type=0,
         type_a_ksize=1,
         map_size=variant.map_size,
-        topk=200,
+        topk=arguments.topk,
         final_padding_same=True,
         batch_size=1,
         center_thr=0.001,
@@ -146,16 +148,16 @@ def main() -> None:
     converted.license = "Apache-2.0"
     converted.short_description = (
         f"{variant.upstream_name} line-segment detector with in-graph "
-        "top-200 selection."
+        f"top-{arguments.topk} selection."
     )
     converted.input_description["image"] = (
         f"{variant.input_size} x {variant.input_size} RGB image"
     )
     converted.output_description["center_points"] = (
-        "Top-200 center coordinates in [y, x] order on the "
+        f"Top-{arguments.topk} center coordinates in [y, x] order on the "
         f"{variant.map_size} x {variant.map_size} map"
     )
-    converted.output_description["center_scores"] = "Top-200 center confidences"
+    converted.output_description["center_scores"] = f"Top-{arguments.topk} center confidences"
     converted.output_description["displacement_map"] = (
         "Endpoint displacements [dx0, dy0, dx1, dy1] on the "
         f"{variant.map_size} x {variant.map_size} map"

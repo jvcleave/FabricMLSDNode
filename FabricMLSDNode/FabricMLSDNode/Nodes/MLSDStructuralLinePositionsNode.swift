@@ -1,4 +1,5 @@
 import Fabric
+import MLSDStructuralLineKit
 import Metal
 import Satin
 import simd
@@ -82,9 +83,10 @@ public final class MLSDStructuralLinePositionsNode: Node
             return
         }
 
-        guard segments.count <= 200 else
+        let lineLimit = StructuralLineLimits.mlsd512Tiny.maximumEdges
+        guard segments.count <= lineLimit else
         {
-            throw self.clearPositionsAndMakeError("M-LSD Positions accepts at most 200 lines.")
+            throw self.clearPositionsAndMakeError("M-LSD Positions accepts at most \(lineLimit) lines.")
         }
 
         guard let sourceSize = self.inputSourceSize.value,

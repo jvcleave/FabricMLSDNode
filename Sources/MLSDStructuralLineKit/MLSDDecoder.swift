@@ -23,7 +23,7 @@ public struct MLSDDecoderConfiguration: Sendable, Equatable
     public init(
         minimumConfidence: Float = 0.05,
         minimumMapLength: Float = 20,
-        maximumEdges: Int = 200
+        maximumEdges: Int = StructuralLineLimits.mlsd512Tiny.maximumEdges
     ) throws
     {
         guard minimumConfidence.isFinite,
@@ -59,7 +59,7 @@ public struct MLSDDecoderConfiguration: Sendable, Equatable
     }
 }
 
-/// Decodes M-LSD's top-200 centers into independent segment endpoint pairs.
+/// Decodes the shipping model's top-1,000 centers into independent segment endpoint pairs.
 /// Endpoints outside the image are clamped only when forming the package's
 /// normalized bottom-left coordinate contract.
 final class MLSDDecoder
@@ -92,8 +92,9 @@ final class MLSDDecoder
         try MLSDModelMetadata.validate(array: displacementMap, named: "displacement_map")
 
         var candidates = [Candidate]()
-        candidates.reserveCapacity(200)
-        for index in 0 ..< 200
+        let candidateCount = StructuralLineLimits.mlsd512Tiny.maximumEdges
+        candidates.reserveCapacity(candidateCount)
+        for index in 0 ..< candidateCount
         {
             let score = centerScores[[0, NSNumber(value: index)]].floatValue
             guard score.isFinite, (0 ... 1).contains(score) else

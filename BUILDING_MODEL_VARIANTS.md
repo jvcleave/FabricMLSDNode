@@ -20,8 +20,11 @@ Use `navervision/mlsd` commit
 | `512-tiny` | `M-LSD_512_tiny` | `MLSD` | 512 × 512 | 256 × 256 |
 | `512-large` | `M-LSD_512_large` | `MLSD_large` | 512 × 512 | 256 × 256 |
 
-All four models return 200 `[y, x]` center points, 200 center scores, and one
-four-channel displacement map. The official TFLite files accept RGBA, but the
+The official TFLite models return 200 `[y, x]` center points, 200 center scores,
+and one four-channel displacement map. The shipping Fabric 512-tiny export
+now selects 1,000 candidates from the same learned graph, producing
+`[1,1000,2]` centers and `[1,1000]` scores with the displacement map unchanged.
+The official TFLite files accept RGBA, but the
 alpha-channel convolution weights are zero. This repository's converter emits
 an equivalent native RGB Core ML input.
 
@@ -66,6 +69,41 @@ test "$(git -C "$mlsd_upstream" rev-parse HEAD)" = \
 Retain the upstream Apache License 2.0 file with every redistributed model.
 Review upstream licensing again if the source revision or model origin changes.
 
+## Derive the shipping 1,000-candidate artifact
+
+For the verified 512-tiny model, a checkpoint download or TensorFlow conversion
+is unnecessary. This graph-only path preserves the accepted backbone exactly:
+
+```sh
+python3.10 -m venv .venv-model-conversion
+source .venv-model-conversion/bin/activate
+python -m pip install coremltools==9.0 numpy==1.23.5 \
+  Pillow==10.4.0 opencv-python-headless==4.8.1.78
+python ResearchFixtures/MLSD/Conversion/export_candidate_variant.py \
+  --candidates 1000 \
+  --output /tmp/mlsd-coreml-candidates/mlsd_512_tiny_top1000.mlmodel
+python ResearchFixtures/MLSD/Conversion/verify_candidate_variant.py \
+  --baseline ResearchFixtures/MLSD/Models/mlsd_512_tiny.mlmodel \
+  --candidate /tmp/mlsd-coreml-candidates/mlsd_512_tiny_top1000.mlmodel \
+  --fixtures ResearchFixtures/MLSD/Sources/city-28s.png \
+    ResearchFixtures/MLSD/Sources/city-sky-control-18s.png \
+  --output /tmp/mlsd-coreml-candidates/top1000-parity.json
+```
+
+The exporter pins the top-200 baseline hash, changes the single TopK operator's
+`K` plus descriptive metadata, and proves the rest of the serialized graph is
+identical. It refuses to overwrite the research baseline. Deterministic
+protobuf serialization makes the top-1,000 artifact reproducible. The verifier
+checks actual 1,000-candidate tensor shapes, exact CPU preservation of the first
+200 centers/scores and the whole displacement map, accepted counts at multiple
+thresholds, and CPU/GPU warm prediction timings on both fixtures. Timing values
+depend on hardware and load; they do not include preprocessing, decoding, or
+Fabric rendering. This verifier is specific to the shipping 512-tiny contract.
+
+The shipping resource is `Sources/MLSDStructuralLineKit/Models/mlsd_512_tiny.mlmodel`;
+its bytes match the research `Models/mlsd_512_tiny_top1000.mlmodel`. Research
+`Models/mlsd_512_tiny.mlmodel` remains the original top-200 baseline.
+
 ## Convert a checkpoint
 
 Choose an output outside the production resource directory until validation is
@@ -76,13 +114,17 @@ mkdir -p /tmp/mlsd-coreml-candidates
 python ResearchFixtures/MLSD/Conversion/convert_mlsd_to_coreml.py \
   --mlsd-repository "$mlsd_upstream" \
   --variant 512-tiny \
+  --topk 200 \
   --output /tmp/mlsd-coreml-candidates/mlsd_512_tiny.mlmodel
 ```
 
 Replace `512-tiny` with `320-tiny`, `320-large`, or `512-large` as needed. Use
 the `coreml_filename` convention shown by
 `ResearchFixtures/MLSD/Conversion/mlsd_variants.py`. Omitting `--variant`
-selects `512-tiny`.
+selects `512-tiny`. `--topk` accepts 200, 500, or 1000 and defaults to 1000.
+This example explicitly selects 200 to compare against the official TFLite
+files below. A fresh TensorFlow conversion is numerically verifiable but is
+not expected to have the same artifact hash as the graph-only derivation.
 
 The converter deliberately emits Core ML's legacy `neuralNetwork`
 representation. The previous ML Program trial produced invalid numerical
@@ -170,9 +212,10 @@ The runtime is intentionally specialized for one model. Replacing it requires
 one coherent change rather than copying a new `.mlmodel` over the existing
 file.
 
-1. Copy the candidate into both
-   `Sources/MLSDStructuralLineKit/Resources/Models/` and
-   `ResearchFixtures/MLSD/Models/`. Keep `LICENSE-MLSD.txt` beside it.
+1. Copy the candidate into `Sources/MLSDStructuralLineKit/Models/` and retain
+   a named research copy under `ResearchFixtures/MLSD/Models/`. Keep
+   `LICENSE-MLSD.txt` beside the production model and preserve the original
+   top-200 research artifact for comparison.
 2. Update `ResearchFixtures/MLSD/SHA256SUMS` and record the upstream revision,
    checkpoint, source TFLite hash, converted-model hash, tool versions, parity
    results, and timings in `ResearchFixtures/MLSD/PROVENANCE.md`.
@@ -180,8 +223,9 @@ file.
    `MLSDModelResource.swift`. Change the license hash only when the reviewed
    license bytes actually change.
 4. Update `MLSDModelMetadata.swift`: input dimensions and the displacement-map
-   shape must match the selected variant. Output names and the top-200 shapes
-   must still be verified, not assumed.
+   shape must match the selected variant. Output names and the selected TopK
+   shapes must still be verified, not assumed. The current runtime expects
+   1,000 candidates.
 5. Replace the hard-coded dispatch dimensions and diagnostic label in
    `MLSDTexturePreprocessor.swift` with the selected input dimensions.
 6. Update `MLSDDecoder.swift`: center bounds, displacement-map indexing, and
@@ -189,8 +233,9 @@ file.
    threshold remains 20 map pixels, which represents a different fraction of a
    160 map than of a 256 map and therefore needs an explicit product decision.
 7. Rename or generalize `StructuralLineLimits.mlsd512Tiny` and every caller.
-   The official variants currently retain top-200 selection, but verify that
-   contract from the produced model.
+   The official artifacts retain top-200 selection; custom exports can change
+   it without retraining. Keep the runtime's frame, decoder, and node limits
+   coherent with the actual produced model.
 8. Regenerate the reference JSON and preview, then update decoder fixtures and
    end-to-end expectations in `MLSDStructuralLineAnalyzerTests.swift`.
 9. Update public README language so the documented production variant matches
@@ -233,3 +278,24 @@ license are embedded, verify their SHA-256 values, and run strict deep code-sign
 verification on both the build product and installed plug-in. Preserve the old
 artifact and reference data until the replacement has passed every check and
 the migration has been reviewed.
+
+After a native plug-in build, exercise the larger arrays and GPU draw with:
+
+```sh
+swift scripts/verify_overlay_shader.swift \
+  "$HOME/Library/Application Support/Fabric/Plugins/FabricMLSDNode.fabricplugin"
+python3 scripts/verify_node_capacity.py \
+  --fabric-build .fabric-spm/arm64-apple-macosx/debug \
+  --plugin "$HOME/Library/Application Support/Fabric/Plugins/FabricMLSDNode.fabricplugin" \
+  --framework-path "/path/to/Fabric Editor.app/Contents/Frameworks"
+```
+
+Use the scratch configuration/architecture matching the bundle. The capacity
+helper reads that completed native build's description to compile against the
+same Fabric module and transitive imports. Supply the Editor framework folder
+when its existing runtime dependencies (such as Sparkle via HapInAVFoundation)
+are needed by Fabric's dynamic library. It loads only the selected plug-in,
+checks Analyze's declared range/default, executes Positions with 1,000 lines
+and empty/over-limit transitions, and executes Overlay's full 16 KB GPU upload.
+The shader fixture checks that the 1,000th instance actually draws in each
+supported presentation orientation.

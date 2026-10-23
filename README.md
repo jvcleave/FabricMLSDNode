@@ -3,7 +3,7 @@
 This repository owns a reusable macOS Swift package for M-LSD structural-line
 analysis and its Fabric plug-in integration. The package bundles the pinned
 M-LSD 512-tiny Core ML model and its Apache-2.0 license, resizes Metal textures
-into the model's image input, and decodes up to 200 scored line segments into a
+into the model's image input, and decodes up to 1,000 scored line segments into a
 validated `StructuralLineFrame`.
 
 Each segment owns two junction entries because M-LSD does not infer shared
@@ -34,9 +34,9 @@ Runs M-LSD 512-tiny asynchronously and publishes the latest completed analysis.
 | --- | --- | --- | --- | --- |
 | `Image` | Input | `Image` | Required | Image to analyze in its Fabric presentation orientation. |
 | `Min Score` | Input | `Float` | `0.05`; range `0...1` | Minimum model confidence required to retain a line. |
-| `Max Lines` | Input | `Int` | `200`; range `1...200` | Maximum number of highest-confidence lines to publish. |
+| `Max Lines` | Input | `Int` | `1000`; range `1...1000` | Maximum number of highest-confidence lines to publish. |
 | `Interval` | Input | `Int` | `1`; range `1...120` | Analyze every Nth changed input image; parameter changes analyze immediately. |
-| `Lines` | Output | `Array<Vector4>` | Up to 200 values | Each value is `[startX, startY, endX, endY]` in normalized bottom-left coordinates. |
+| `Lines` | Output | `Array<Vector4>` | Up to 1,000 values | Each value is `[startX, startY, endX, endY]` in normalized bottom-left coordinates. |
 | `Scores` | Output | `Array<Float>` | One value per `Lines` element | Confidence values index-aligned with `Lines`. |
 | `Count` | Output | `Int` | — | Number of lines in the latest completed analysis. |
 | `Size` | Output | `Vector2` | — | Presentation width and height of the analyzed image. |
@@ -50,7 +50,7 @@ inference.
 | Port | Direction | Fabric type | Default or requirement | Description |
 | --- | --- | --- | --- | --- |
 | `Image` | Input | `Image` | Required | Background image. Connect Analyze `Frame` for frame-aligned results. |
-| `Lines` | Input | `Array<Vector4>` | Empty allowed; maximum 200 | Normalized bottom-left `[startX, startY, endX, endY]` segments. |
+| `Lines` | Input | `Array<Vector4>` | Empty allowed; maximum 1,000 | Normalized bottom-left `[startX, startY, endX, endY]` segments. |
 | `Scores` | Input | `Array<Float>` | Optional | Confidence values aligned one-to-one with `Lines`; omitted values are treated as confidence 1. |
 | `Color` | Input | `Vector4` color | Cyan `(0, 1, 1, 1)` | Overlay line color and alpha. |
 | `Width` | Input | `Float` | `2`; range `0.5...32` | Line width in presentation pixels. |
@@ -65,7 +65,7 @@ feed to geometry nodes.
 
 | Port | Direction | Fabric type | Default or requirement | Description |
 | --- | --- | --- | --- | --- |
-| `Lines` | Input | `Array<Vector4>` | Empty allowed; maximum 200 | Normalized bottom-left line segments from Analyze or a compatible producer. |
+| `Lines` | Input | `Array<Vector4>` | Empty allowed; maximum 1,000 | Normalized bottom-left line segments from Analyze or a compatible producer. |
 | `Size` | Input | `Vector2` | Required when `Lines` is nonempty | Presentation width and height used to preserve the source aspect ratio. |
 | `Width` | Input | `Float` | `1`; range `0.001...1000` | Width of the centered XY plane in world units. |
 | `Positions` | Output | `Array<Vector3>` | Two values per line | Ordered start/end pairs on an aspect-correct XY plane. Every position has `z = 0`; no depth or shared topology is inferred. |
@@ -161,6 +161,13 @@ The plug-in registers `M-LSD Analyze`. It accepts an `Image` plus `Min Score`
 - `Size`: the analyzed image's presentation width and height.
 - `Frame`: the source image paired with those completed segments.
 
+The bundled export selects the top 1,000 candidates using the original
+512-tiny weights. `Min Score` and the fixed minimum line-length filter can
+reduce the accepted count. New nodes default to `Max Lines = 1000`; existing
+saved graphs retain their authored value, so raise a saved `200` to `1000`
+to use the larger capacity. The original top-200 artifact remains in research
+for reproducible comparison.
+
 The node encodes orientation-aware preprocessing into Fabric's current command
 buffer, then performs Core ML inference asynchronously after GPU completion.
 It permits one active inference and retains only the newest eligible pending
@@ -182,7 +189,7 @@ its content can be newer than the asynchronously completed line arrays.
 
 The overlay has line color, width in presentation pixels, opacity, and minimum
 confidence controls. If confidences are omitted, every line is treated as
-confidence 1. It accepts at most 200 lines with finite normalized endpoints;
+confidence 1. It accepts at most 1,000 lines with finite normalized endpoints;
 if confidences are connected, their count must match. Invalid arrays produce
 a recoverable Fabric execution error. With no visible lines it passes the
 source image through. Otherwise it copies the stored image, draws anti-aliased

@@ -47,9 +47,9 @@ public final class MLSDStructuralLineAnalysisNode: Node
                 ParameterPort(
                     parameter: IntParameter(
                         "Max Lines",
-                        200,
+                        StructuralLineLimits.mlsd512Tiny.maximumEdges,
                         1,
-                        200,
+                        StructuralLineLimits.mlsd512Tiny.maximumEdges,
                         .inputfield,
                         "Maximum number of highest-confidence lines to output"
                     )
@@ -148,7 +148,6 @@ public final class MLSDStructuralLineAnalysisNode: Node
 
     public override func startExecution(renderer: GraphRenderer) throws
     {
-        try super.startExecution(renderer: renderer)
         self.lifecycleGeneration &+= 1
         self.resetSchedulingState()
 
@@ -158,6 +157,7 @@ public final class MLSDStructuralLineAnalysisNode: Node
             device: self.context.device,
             modelConfiguration: configuration
         )
+        try super.startExecution(renderer: renderer)
     }
 
     public override func stopExecution(renderer: GraphRenderer) throws
@@ -255,7 +255,8 @@ public final class MLSDStructuralLineAnalysisNode: Node
         let presentationWidth = max(1, Int(image.presentationSize.width.rounded()))
         let presentationHeight = max(1, Int(image.presentationSize.height.rounded()))
         let minimumConfidence = min(max(self.inputMinimumConfidence.value ?? 0.05, 0), 1)
-        let maximumLines = min(max(self.inputMaximumLines.value ?? 200, 1), 200)
+        let lineLimit = StructuralLineLimits.mlsd512Tiny.maximumEdges
+        let maximumLines = min(max(self.inputMaximumLines.value ?? lineLimit, 1), lineLimit)
         let decoderConfiguration = try MLSDDecoderConfiguration(
             minimumConfidence: minimumConfidence,
             minimumMapLength: 20,
