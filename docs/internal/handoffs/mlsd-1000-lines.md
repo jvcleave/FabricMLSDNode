@@ -3,6 +3,7 @@
 - Updated: 2026-10-23
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Starting branch/HEAD: `main` at `fa2705d`
+- Completed implementation: `d04ddfd`, committed and pushed to `origin/main`.
 
 ## Objective and Definition of Done
 
@@ -96,6 +97,8 @@ check; do not invent new latency claims from the previous top-200 benchmark.
 
 ## Next Exact Action
 
-Review the scoped final diff, commit and push the completed capacity upgrade,
-and record the implementation revision. Exclude the user scene and unrelated
-ABI-rebuild handoff from staging.
+Restart a compatible Debug Fabric Editor to load the installed updated bundle.
+In saved scenes, raise the authored Max Lines value to 1,000 as desired. This
+milestone is complete; live quality/cadence and Geometry Compose's empty-input
+transition remain separate follow-up checks. Preserve the user scene and
+unrelated ABI-rebuild handoff.

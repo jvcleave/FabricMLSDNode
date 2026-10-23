@@ -4,7 +4,7 @@
 - Owning repository: `/Users/jvcleave/Documents/WORK_IN_PROGRESS/MAC_APPS/FabricMLSDNode`
 - Latest documentation commit on `main`: `47bc8e4` (`Document M-LSD node port contracts`), pushed to `origin/main`
 - Latest sample commit on `main`: `c7a82b1` (`Add M-LSD geometry example`)
-- Latest implementation commit on `main`: `981c5a2` (`Add planar M-LSD positions node`)
+- Latest implementation commit on `main`: `d04ddfd` (`Raise Fabric M-LSD capacity to 1000 lines`), pushed to `origin/main`
 - Prior points/geometry planning checkpoint: `1d10ef7`
 
 ## Objective and Definition of Done
@@ -19,7 +19,7 @@ The resulting Fabric plug-in is explicitly self-contained: MESS is migration pro
 
 ## Selected Bounded Milestone
 
-The current milestone is the 1,000-line upgrade. Resume from
+The 1,000-line upgrade is complete and pushed at `d04ddfd`. Resume from
 `docs/internal/handoffs/mlsd-1000-lines.md` for its decisions, verification,
 artifact hash, dirty-work constraints, and next action. The positions milestone
 below is retained as historical implementation context.
@@ -118,6 +118,8 @@ All four official variants converted successfully and passed CPU parity on both 
 
 ## Next Exact Action
 
-Complete the 1,000-line upgrade using `docs/internal/handoffs/mlsd-1000-lines.md`.
-The previously planned nonempty → empty → nonempty live geometry transition,
+The 1,000-line bundle is built, installed as Debug, verified, and pushed at
+`d04ddfd`. Restart a matching Fabric Editor and increase saved Max Lines values
+to use the new capacity. See `docs/internal/handoffs/mlsd-1000-lines.md` for
+verification. The nonempty → empty → nonempty live geometry transition,
 cadence, and deterministic export checks remain separate follow-up work.
