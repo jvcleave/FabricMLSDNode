@@ -74,7 +74,7 @@ Add a dedicated plug-in geometry node only if the built-in composition path cann
 - `Package.swift`
 - `Sources/MLSDStructuralLineKit/`
 - `Tests/MLSDStructuralLineKitTests/`
-- `BUILDING_MODEL_VARIANTS.md`
+- `docs/internal/runbooks/BUILDING_MODEL_VARIANTS.md`
 - `docs/FABRIC_INTEGRATION_GAPS.md`
 - `ResearchFixtures/MLSD/Conversion/mlsd_variants.py`
 - `ResearchFixtures/MLSD/Conversion/requirements-model-conversion.txt`

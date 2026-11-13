@@ -47,7 +47,7 @@ contract coherently, then build/install and checkpoint the complete change.
 - `Sources/MLSDStructuralLineKit/` — shipping model, limits, decoder, metadata.
 - `FabricMLSDNode/FabricMLSDNode/Nodes/` — three node contracts.
 - `Tests/MLSDStructuralLineKitTests/` — decoder boundary and inference tests.
-- `README.md`, `BUILDING_MODEL_VARIANTS.md`, research provenance/hash manifest.
+- `README.md`, `docs/internal/runbooks/BUILDING_MODEL_VARIANTS.md`, research provenance/hash manifest.
 
 ## Implemented Stage
 

@@ -127,7 +127,8 @@ minimum displacement length 20. No retraining or MESS dependency is introduced.
 `Conversion/export_candidate_variant.py` requires Core ML Tools 9.0. It pins
 the baseline hash and verifies exact graph equality after restoring TopK and
 metadata; deterministic protobuf serialization makes repeated exports match.
-See `BUILDING_MODEL_VARIANTS.md` in the repository root for complete commands.
+The complete commands are in the
+[model conversion runbook](../../docs/internal/runbooks/BUILDING_MODEL_VARIANTS.md).
 The original TensorFlow converter also accepts `--topk 200|500|1000` for
 independent source regeneration (default 1000).
 

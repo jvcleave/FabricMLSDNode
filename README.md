@@ -14,15 +14,8 @@ Fabric, Satin, MESS, MessScene, Python, TensorFlow, or TFLite at runtime.
 
 The Fabric plug-in provides three nodes: an analysis node that publishes typed
 segment data, a separate overlay node that renders those segments, and a
-positions node that places them on a flat XY plane.
-User-authored sample `.fabric` scenes will demonstrate both the
-direct overlay path and independent use of the analysis outputs. See
-[`docs/internal/handoffs/fabric-mlsd-node.md`](docs/internal/handoffs/fabric-mlsd-node.md)
-for current milestone status.
-
-Current Fabric constraints, the plug-in's local adaptations, and candidate
-host API improvements are tracked in
-[`docs/FABRIC_INTEGRATION_GAPS.md`](docs/FABRIC_INTEGRATION_GAPS.md).
+positions node that places them on a flat XY plane. The included
+[`FabricScenes/`](FabricScenes/) demonstrate the overlay and geometry paths.
 
 ## Node port reference
 
@@ -242,9 +235,12 @@ See [ResearchFixtures/MLSD/PROVENANCE.md](ResearchFixtures/MLSD/PROVENANCE.md)
 for model source and license pins, conversion, independent reference fixtures,
 and measured Apple-runtime performance.
 
-Developers evaluating another official checkpoint family should follow
-[`BUILDING_MODEL_VARIANTS.md`](BUILDING_MODEL_VARIANTS.md). Conversion tooling
-supports selecting the official 320/512 and tiny/large families, but the
-shipping Swift runtime remains deliberately pinned to the verified 512-tiny
-artifact until another variant completes the documented integration and
-acceptance process.
+Conversion tooling supports the official 320/512 and tiny/large families.
+The Swift runtime ships the verified 512-tiny artifact. Use the conversion
+and acceptance steps when evaluating another checkpoint family.
+[Model conversion runbook](docs/internal/runbooks/BUILDING_MODEL_VARIANTS.md)
+
+## Maintainer documentation
+
+Find Fabric integration gaps, model verification, and task checkpoints in the
+[internal documentation index](docs/internal/INTERNAL_DOCUMENTATION.md).

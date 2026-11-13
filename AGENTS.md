@@ -1,5 +1,8 @@
 # Fabric M-LSD Plugin Guidance
 
+Start with the [README](README.md) and
+[internal documentation index](docs/internal/INTERNAL_DOCUMENTATION.md).
+
 ## Scope and architecture
 
 - This repository owns the reusable M-LSD structural-line package and the Fabric plug-in that adapts it to Fabric.
@@ -34,7 +37,7 @@
 Use this workflow when requested or when work spans multiple implementation stages.
 
 - Before implementation, create or update `docs/internal/handoffs/<task-slug>.md` from the established handoff format.
-- Keep the handoff concise: record decisions, paths, state, commands, outcomes, risks, and the next exact action.
+- Record decisions, paths, state, commands, outcomes, and the next exact action.
 - Work on one bounded milestone at a time and checkpoint it before starting another.
 - Update the handoff after a coherent stage, after verification, after an authorized commit, before an expensive build, before the next milestone, and before stopping due to constraints.
 - Do not update it after every small edit.

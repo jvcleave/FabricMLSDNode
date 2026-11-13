@@ -13,8 +13,8 @@ also copied into the `MLSDStructuralLineKit` runtime target.
   selected segments, threshold counts, and Core ML CPU parity.
 - `Previews/city-28s-lines.png` visualizes the retained `0.05` city segments.
 - `Conversion/` contains the conversion and reference-generation scripts.
-- [`BUILDING_MODEL_VARIANTS.md`](../../BUILDING_MODEL_VARIANTS.md) documents the
-  complete variant conversion, validation, and runtime-integration workflow.
+- The complete workflow covers variant conversion, validation, and runtime
+  integration. [Model conversion runbook](../../docs/internal/runbooks/BUILDING_MODEL_VARIANTS.md)
 
 The scripts require a separate research Python environment with TensorFlow
 2.12.0, Core ML Tools 9.0, OpenCV, NumPy, and Pillow. The runtime Swift package
