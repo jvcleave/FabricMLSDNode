@@ -61,7 +61,7 @@ extension MLSDStructuralLineError: LocalizedError
             case .commandEncodingFailed:
                 "Could not encode M-LSD Metal preprocessing."
             case let .gpuExecutionFailed(message):
-                "M-LSD Metal preprocessing failed\(message.map { ": \($0)" } ?? ".")."
+                "M-LSD Metal preprocessing failed\(message.map { ": \($0)" } ?? ".")"
             case .invalidSourceTexture:
                 "M-LSD source texture dimensions must both be positive."
             case .deviceMismatch:

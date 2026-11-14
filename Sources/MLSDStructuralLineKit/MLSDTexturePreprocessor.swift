@@ -193,6 +193,12 @@ final class MLSDTexturePreprocessor
             threadsPerThreadgroup: MTLSize(width: width, height: height, depth: 1)
         )
         encoder.endEncoding()
+
+        // Metal retains the encoded texture, but Core Video requires the wrapper
+        // and its backing pixel buffer to survive the work in this segment.
+        commandBuffer.addCompletedHandler { [metalTexture, pixelBuffer, sourceTexture] _ in
+            withExtendedLifetime((metalTexture, pixelBuffer, sourceTexture)) {}
+        }
         return pixelBuffer
     }
 }

@@ -2,6 +2,7 @@ import CoreML
 import CoreVideo
 import Metal
 import MetalKit
+import MetalPerformanceShaders
 import simd
 import Testing
 @testable import MLSDStructuralLineKit
@@ -24,6 +25,10 @@ struct MLSDStructuralLineAnalyzerTests
             shape: [1, 256, 256, 4],
             dataType: .float32
         )
+        for index in 0 ..< 1000
+        {
+            self.set(scores, [0, index], 0)
+        }
         self.set(points, [0, 0, 0], 100)
         self.set(points, [0, 0, 1], 50)
         self.set(scores, [0, 0], 0.9)
@@ -239,6 +244,50 @@ struct MLSDStructuralLineAnalyzerTests
         let bottomLeft = try self.rgbPixel(pixelBuffer, x: 64, y: 448)
         #expect(topLeft == SIMD3<UInt8>(0, 0, 255))
         #expect(bottomLeft == SIMD3<UInt8>(255, 0, 0))
+    }
+
+    @Test("Overlapping command-buffer segments keep their own model input pixels")
+    func preprocessesOverlappingSegments() throws
+    {
+        let device = try #require(MTLCreateSystemDefaultDevice())
+        let commandQueue = try #require(device.makeCommandQueue())
+        let gate = try #require(device.makeSharedEvent())
+        let preprocessor = try MLSDTexturePreprocessor(device: device)
+        let firstSegment = try #require(commandQueue.makeCommandBuffer())
+        let commands = MPSCommandBuffer(commandBuffer: firstSegment)
+        let size = StructuralLineImageSize(width: 1, height: 1)
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false
+        )
+        descriptor.storageMode = .shared
+        descriptor.usage = .shaderRead
+
+        func encode(_ pixel: SIMD4<UInt8>) throws -> CVPixelBuffer
+        {
+            let texture = try #require(device.makeTexture(descriptor: descriptor))
+            var pixel = pixel
+            texture.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0,
+                            withBytes: &pixel, bytesPerRow: 4)
+            return try preprocessor.encode(texture: texture, sourceSize: size,
+                                           textureTransform: matrix_identity_float4x4,
+                                           commandBuffer: commands)
+        }
+
+        commands.encodeWaitForEvent(gate, value: 1)
+        let first = try encode(SIMD4(255, 0, 0, 255))
+        commands.commitAndContinue()
+        defer { gate.signaledValue = 1 }
+
+        let second = try encode(SIMD4(0, 255, 0, 255))
+        commands.commit()
+        #expect(firstSegment.status != .completed)
+        gate.signaledValue = 1
+        commands.waitUntilCompleted()
+
+        #expect(firstSegment.status == .completed)
+        #expect(commands.status == .completed)
+        #expect(try self.rgbPixel(first, x: 256, y: 256) == SIMD3<UInt8>(255, 0, 0))
+        #expect(try self.rgbPixel(second, x: 256, y: 256) == SIMD3<UInt8>(0, 255, 0))
     }
 
     private func set(_ array: MLMultiArray, _ indices: [Int], _ value: Float)

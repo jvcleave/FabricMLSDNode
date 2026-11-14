@@ -123,48 +123,84 @@ public final class MLSDStructuralLineAnalysisNode: Node
 
     private struct AnalysisRequest
     {
-        let identifier: UInt64
         let image: FabricImage
         let sourceSize: StructuralLineImageSize
         let textureTransform: simd_float4x4
         let decoderConfiguration: MLSDDecoderConfiguration
     }
 
-    private enum CompletedAnalysis
+    private typealias AnalysisResult = Result<StructuralLineFrame, any Error>
+
+    private final class AnalysisMailbox
     {
-        case success(requestIdentifier: UInt64, frame: StructuralLineFrame, image: FabricImage)
-        case failure(requestIdentifier: UInt64, message: String)
+        private let lock = NSLock()
+        private var result: AnalysisResult?
+
+        var outcome: AnalysisResult? { self.lock.withLock { self.result } }
+
+        func finish(_ result: AnalysisResult)
+        {
+            self.lock.withLock
+            {
+                if self.result == nil { self.result = result }
+            }
+        }
+    }
+
+    // The completion handler owns the source image and its external backing
+    // through GPU work and inference. Releasing the handler before it reports an
+    // outcome also retires the request.
+    private final class AnalysisCompletion
+    {
+        let mailbox = AnalysisMailbox()
+        private let sourceImage: FabricImage
+
+        init(sourceImage: FabricImage) { self.sourceImage = sourceImage }
+
+        func finish(_ result: AnalysisResult) { self.mailbox.finish(result) }
+
+        deinit { self.mailbox.finish(.failure(CancellationError())) }
+    }
+
+    private struct ActiveAnalysis
+    {
+        let mailbox: AnalysisMailbox
+        // Clearing the request cancels publication while the mailbox still tracks retirement.
+        var request: AnalysisRequest?
     }
 
     private var analyzer: MLSDStructuralLineAnalyzer?
-    private var inferenceIsActive = false
+    private var activeAnalysis: ActiveAnalysis?
     private var latestPendingRequest: AnalysisRequest?
-    private var completedAnalysis: CompletedAnalysis?
-    private var lifecycleGeneration: UInt64 = 0
-    private var nextRequestIdentifier: UInt64 = 0
-    private var minimumAcceptedRequestIdentifier: UInt64 = 0
+    private var inputConnectionID: UUID?
     private var changedImageCount = 0
     private var hasRequestedAnalysis = false
 
+    public override var isDirty: Bool
+    {
+        if super.isDirty { return true }
+        guard self.executionState == .started else { return false }
+        if let activeAnalysis { return activeAnalysis.mailbox.outcome != nil }
+        return self.latestPendingRequest != nil
+    }
+
     public override func startExecution(renderer: GraphRenderer) throws
     {
-        self.lifecycleGeneration &+= 1
-        self.resetSchedulingState()
-
         let configuration = MLModelConfiguration()
         configuration.computeUnits = .cpuAndGPU
         self.analyzer = try MLSDStructuralLineAnalyzer(
             device: self.context.device,
             modelConfiguration: configuration
         )
+        self.markDirty()
         try super.startExecution(renderer: renderer)
     }
 
     public override func stopExecution(renderer: GraphRenderer) throws
     {
-        self.lifecycleGeneration &+= 1
-        self.minimumAcceptedRequestIdentifier = self.nextRequestIdentifier
-        self.resetSchedulingState()
+        self.invalidateInput()
+        self.inputConnectionID = nil
+        if self.activeAnalysis?.mailbox.outcome != nil { self.activeAnalysis = nil }
         self.analyzer = nil
         try super.stopExecution(renderer: renderer)
     }
@@ -176,25 +212,23 @@ public final class MLSDStructuralLineAnalysisNode: Node
         commandBuffer: MTLCommandBuffer
     ) throws
     {
-        if self.inputImage.valueDidChange, self.inputImage.value == nil
+        let image = self.inputImage.value
+        if self.inputImage.valueDidChange
         {
-            self.nextRequestIdentifier &+= 1
-            self.minimumAcceptedRequestIdentifier = self.nextRequestIdentifier
-            self.latestPendingRequest = nil
-            self.hasRequestedAnalysis = false
-            self.changedImageCount = 0
+            let connectionID = self.inputImage.connectedOutlets.first.flatMap {
+                self.inputImage.connection(to: $0)?.id
+            }
+            if connectionID != self.inputConnectionID { self.invalidateInput() }
+            self.inputConnectionID = connectionID
         }
+        if image == nil { self.invalidateInput() }
 
-        let completedErrorMessage = self.publishCompletedAnalysisIfAvailable()
+        let completedError = self.retireCompletedAnalysis()
         let decoderParametersChanged = self.inputMinimumConfidence.valueDidChange
             || self.inputMaximumLines.valueDidChange
         let intervalChanged = self.inputAnalysisInterval.valueDidChange
 
-        if self.inputImage.value == nil
-        {
-            self.publishEmptyState()
-        }
-        else if let image = self.inputImage.value
+        if let image
         {
             var shouldRequestAnalysis = decoderParametersChanged || intervalChanged
 
@@ -213,25 +247,26 @@ public final class MLSDStructuralLineAnalysisNode: Node
 
             if shouldRequestAnalysis
             {
-                self.latestPendingRequest = try self.makeRequest(image: image)
+                do
+                {
+                    self.latestPendingRequest = try self.makeRequest(image: image)
+                }
+                catch
+                {
+                    self.invalidateInput()
+                    throw Self.analysisError(error)
+                }
                 self.hasRequestedAnalysis = true
             }
         }
 
-        if self.inferenceIsActive == false, let request = self.latestPendingRequest
+        if self.activeAnalysis == nil, let request = self.latestPendingRequest
         {
             self.latestPendingRequest = nil
             try self.beginAnalysis(request: request, commandBuffer: commandBuffer)
         }
 
-        if let completedErrorMessage
-        {
-            throw FabricError(
-                .execution(.failed),
-                severity: .recoverable,
-                message: completedErrorMessage
-            )
-        }
+        if let completedError { throw Self.analysisError(completedError) }
     }
 
     private func makeRequest(image: FabricImage) throws -> AnalysisRequest
@@ -244,14 +279,9 @@ public final class MLSDStructuralLineAnalysisNode: Node
               image.presentationSize.height <= CGFloat(UInt32.max)
         else
         {
-            throw FabricError(
-                .execution(.failed),
-                severity: .recoverable,
-                message: "The image has invalid M-LSD presentation dimensions."
-            )
+            throw StructuralLineValidationError.invalidSourceSize
         }
 
-        self.nextRequestIdentifier &+= 1
         let presentationWidth = max(1, Int(image.presentationSize.width.rounded()))
         let presentationHeight = max(1, Int(image.presentationSize.height.rounded()))
         let minimumConfidence = min(max(self.inputMinimumConfidence.value ?? 0.05, 0), 1)
@@ -263,7 +293,6 @@ public final class MLSDStructuralLineAnalysisNode: Node
             maximumEdges: maximumLines
         )
         return AnalysisRequest(
-            identifier: self.nextRequestIdentifier,
             image: image,
             sourceSize: StructuralLineImageSize(
                 width: presentationWidth,
@@ -288,77 +317,63 @@ public final class MLSDStructuralLineAnalysisNode: Node
             )
         }
 
-        let generation = self.lifecycleGeneration
-        try analyzer.analyzeAfterCommandBufferCompletes(
-            texture: request.image.texture,
-            sourceSize: request.sourceSize,
-            textureTransform: request.textureTransform,
-            commandBuffer: commandBuffer,
-            decoderConfiguration: request.decoderConfiguration
-        )
-        { [weak self] result in
-            switch result
-            {
-                case let .success(frame):
-                    Task { @MainActor [weak self] in
-                        self?.completeAnalysis(
-                            .success(
-                                requestIdentifier: request.identifier,
-                                frame: frame,
-                                image: request.image
-                            ),
-                            lifecycleGeneration: generation
-                        )
-                    }
-                case let .failure(error):
-                    let message = error.localizedDescription
-                    Task { @MainActor [weak self] in
-                        self?.completeAnalysis(
-                            .failure(
-                                requestIdentifier: request.identifier,
-                                message: message
-                            ),
-                            lifecycleGeneration: generation
-                        )
-                    }
-            }
-        }
-        self.inferenceIsActive = true
-    }
-
-    private func completeAnalysis(
-        _ analysis: CompletedAnalysis,
-        lifecycleGeneration: UInt64
-    )
-    {
-        guard lifecycleGeneration == self.lifecycleGeneration else { return }
-        self.inferenceIsActive = false
-        self.completedAnalysis = analysis
-        self.markDirty()
-    }
-
-    private func publishCompletedAnalysisIfAvailable() -> String?
-    {
-        guard let completedAnalysis else { return nil }
-        self.completedAnalysis = nil
-
-        switch completedAnalysis
+        let completion = AnalysisCompletion(sourceImage: request.image)
+        do
         {
-            case let .success(requestIdentifier, frame, image):
-                guard requestIdentifier >= self.minimumAcceptedRequestIdentifier else
-                {
-                    return nil
-                }
-                self.publish(frame: frame, image: image)
-                return nil
-            case let .failure(requestIdentifier, message):
-                guard requestIdentifier >= self.minimumAcceptedRequestIdentifier else
-                {
-                    return nil
-                }
-                self.publishEmptyState()
-                return "M-LSD structural-line analysis failed: \(message)"
+            try analyzer.analyzeAfterCommandBufferCompletes(
+                texture: request.image.texture,
+                sourceSize: request.sourceSize,
+                textureTransform: request.textureTransform,
+                commandBuffer: commandBuffer,
+                decoderConfiguration: request.decoderConfiguration,
+                completion: completion.finish
+            )
         }
+        catch
+        {
+            self.publishEmptyState()
+            throw Self.analysisError(error)
+        }
+        self.activeAnalysis = ActiveAnalysis(mailbox: completion.mailbox, request: request)
+    }
+
+    private func retireCompletedAnalysis() -> (any Error)?
+    {
+        guard let active = self.activeAnalysis, let outcome = active.mailbox.outcome else { return nil }
+        self.activeAnalysis = nil
+        guard let request = active.request else { return nil }
+
+        switch outcome
+        {
+            case let .success(frame):
+                self.publish(frame: frame, image: request.image)
+                return nil
+            case .failure(is CancellationError):
+                // A newer eligible input takes precedence when the lost work is retried.
+                if self.latestPendingRequest == nil { self.latestPendingRequest = request }
+                return nil
+            case let .failure(error):
+                self.publishEmptyState()
+                return error
+        }
+    }
+
+    private static func analysisError(_ error: any Error) -> FabricError
+    {
+        FabricError(
+            .execution(.failed), severity: .recoverable,
+            message: "M-LSD structural-line analysis failed: \(error.localizedDescription)",
+            underlyingError: error
+        )
+    }
+
+    private func invalidateInput()
+    {
+        self.activeAnalysis?.request = nil
+        self.latestPendingRequest = nil
+        self.changedImageCount = 0
+        self.hasRequestedAnalysis = false
+        self.publishEmptyState()
     }
 
     private func publish(frame: StructuralLineFrame, image: FabricImage)
@@ -393,14 +408,5 @@ public final class MLSDStructuralLineAnalysisNode: Node
         self.outputLineCount.send(0)
         self.outputSourceSize.send(.zero)
         self.outputAnalyzedImage.send(nil)
-    }
-
-    private func resetSchedulingState()
-    {
-        self.inferenceIsActive = false
-        self.latestPendingRequest = nil
-        self.completedAnalysis = nil
-        self.changedImageCount = 0
-        self.hasRequestedAnalysis = false
     }
 }

@@ -46,6 +46,25 @@ func execute(_ node: Node) throws
         renderPassDescriptor: pass, commandBuffer: commandBuffer)
 }
 
+func copyPixels(from texture: MTLTexture) throws -> MTLBuffer
+{
+    let bytesPerRow = 256
+    let length = bytesPerRow * texture.height
+    let buffer = try require(device.makeBuffer(length: length, options: .storageModeShared), "Missing readback buffer")
+    let blit = try require(commandBuffer.makeBlitCommandEncoder(), "Missing overlay readback encoder")
+    blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: .init(),
+        sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1),
+        to: buffer, destinationOffset: 0, destinationBytesPerRow: bytesPerRow,
+        destinationBytesPerImage: length)
+    blit.endEncoding()
+    return buffer
+}
+
+func greenChannel(_ buffer: MTLBuffer, x: Int, y: Int) -> Float16
+{
+    buffer.contents().load(fromByteOffset: y * 256 + x * 8 + 2, as: Float16.self)
+}
+
 let analysis = try makeNode("M-LSD Analyze")
 let maximumLines: ParameterPort<Int> = analysis.port(named: "inputMaximumLines")
 let maximumParameter = try require(maximumLines.parameter as? IntParameter, "Missing Max Lines parameter")
@@ -94,13 +113,47 @@ pixels.withUnsafeBytes { bytes in
             withBytes: address, bytesPerRow: 16 * 4)
     }
 }
-inputImage.value = FabricImage.unmanaged(texture: texture)
-overlayLines.value = segments
+let sourceImage = FabricImage.unmanaged(texture: texture)
+inputImage.value = sourceImage
+// Only the final instance crosses the asserted pixel in each draw.
+var firstDraw = ContiguousArray(repeating: SIMD4<Float>(0, 0, 0.05, 0), count: 1000)
+firstDraw[999] = SIMD4(0.25, 0.25, 0.75, 0.25)
+overlayLines.value = firstDraw
 try execute(overlay)
-try expect(outputImage.value != nil, "Overlay failed to encode 1,000 segments")
+let firstOutput = try require(outputImage.value, "Overlay failed to encode 1,000 segments")
+let secondOverlay = try makeNode("M-LSD Overlay")
+let secondImage: NodePort<FabricImage> = secondOverlay.port(named: "inputImage")
+let secondLines: NodePort<ContiguousArray<SIMD4<Float>>> = secondOverlay.port(named: "inputSegments")
+let secondOutput: NodePort<FabricImage> = secondOverlay.port(named: "outputImage")
+var secondDraw = firstDraw
+secondDraw[999] = SIMD4(0.25, 0.75, 0.75, 0.75)
+secondImage.value = sourceImage
+secondLines.value = secondDraw
+try execute(secondOverlay)
+let secondResult = try require(secondOutput.value, "Second overlay failed to encode 1,000 segments")
+try expect(firstOutput.texture.pixelFormat == .rgba16Float && secondResult.texture.pixelFormat == .rgba16Float,
+           "Overlay changed output format")
+let firstPixels = try copyPixels(from: firstOutput.texture)
+let secondPixels = try copyPixels(from: secondResult.texture)
+
+secondLines.value = []
+try execute(secondOverlay)
+try expect(secondOutput.value === sourceImage, "Empty overlay did not pass through the source image")
+let scores: NodePort<ContiguousArray<Float>> = secondOverlay.port(named: "inputConfidences")
+let minScore: ParameterPort<Float> = secondOverlay.port(named: "inputMinimumConfidence")
+secondLines.value = secondDraw
+scores.value = ContiguousArray(repeating: 0.1, count: secondDraw.count)
+minScore.value = 0.2
+try execute(secondOverlay)
+try expect(secondOutput.value === sourceImage, "Filtered overlay did not pass through the source image")
+
 commandBuffer.commit()
 commandBuffer.waitUntilCompleted()
 try expect(commandBuffer.status == .completed, "Overlay GPU execution failed")
+try expect(greenChannel(firstPixels, x: 8, y: 11) > 0.5 && greenChannel(firstPixels, x: 8, y: 3) == 0,
+           "First draw lost its final segment or read the second draw's upload")
+try expect(greenChannel(secondPixels, x: 8, y: 3) > 0.5 && greenChannel(secondPixels, x: 8, y: 11) == 0,
+           "Second draw lost its final segment or read the first draw's upload")
 
 overlayLines.value = segments + [SIMD4<Float>(0, 0, 1, 1)]
 do
@@ -110,4 +163,4 @@ do
 }
 catch is FabricError {}
 
-print("M-LSD capacity fixture passed: Analyze default/range 1,000; Positions 2,000 ordered endpoints and clearing; Overlay 1,000-segment GPU encoding; both reject 1,001 lines")
+print("M-LSD capacity fixture passed: Analyze default/range 1,000; Positions 2,000 ordered endpoints and clearing; independent 1,000-segment overlay draws and pass-through; both reject 1,001 lines")

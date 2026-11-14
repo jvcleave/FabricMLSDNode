@@ -5,6 +5,10 @@ lifetime issue, simplify overlay buffer allocation, and deliver inference result
 on Fabric's graph execution owner. Adopt Satin strokes for the geometry example
 when Fabric ships its Stroke Geometry node.
 
+The preprocessing, overlay, and owner-side Analyze changes are implemented and
+verified at these Fabric and Satin pins. Stroke Geometry and scoped Iterator
+delivery depend on later host changes. [Implementation and verification](../handoffs/mlsd-satin-integration.md)
+
 The baseline is M-LSD `6b5c73d`, Fabric `c1da6639`, and Satin `ff825e49`. The
 staged Debug bundle passed the capacity and overlay pixel fixtures, including
 the 1,000th segment, identity, vertical flip, and quarter turn. An offscreen

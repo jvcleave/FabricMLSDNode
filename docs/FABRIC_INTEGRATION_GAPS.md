@@ -39,60 +39,46 @@ be able to register one value adapter without extending Fabric enums or
 requiring Fabric to link the plug-in's concrete type when a document is merely
 inspected.
 
-## 2. Asynchronous completion has no documented invalidation boundary
+## 2. Processor readiness and asynchronous result scope
 
-**Observed constraint:** `Node.markDirty()` mutates a plain Boolean and has no
-documented thread-safety or actor contract. Metal completion handlers and model
-callbacks do not run on Fabric's graph-execution thread. Publishing ports or
-calling `markDirty()` directly from those callbacks could race graph traversal
-and `markClean()`.
+**Fabric API on `c1da6639`:** Processor nodes can override `Node.isDirty` to
+report owner-consumed work. `GraphRenderer` checks it as it traverses the
+graph, and `SubgraphNode` includes inner node readiness in its own execution
+decision. Metal and model callbacks run on other threads. `markDirty()` and
+port mutation belong on the graph execution owner.
 
-Host source: `Fabric/Graph/Node/Node.swift` and
-`Fabric/Graph/GraphRenderer.swift`.
+**M-LSD behavior:** The worker deposits the outcome in a synchronized mailbox
+for that request. `isDirty` makes the result visible to Fabric, and `execute()`
+consumes it and publishes the paired outlets before downstream nodes run. An
+offscreen `GraphRenderer` fixture verified delivery through a clean Processor
+subgraph with a static image. [Analysis delivery fixture](../scripts/verify_analysis_delivery.swift)
 
-**Local workaround:** The plug-in transfers completed inference from its serial
-queue through `Task { @MainActor in ... }` to update node bookkeeping and call
-`markDirty()`. Port publication occurs only when Fabric next calls `execute()`.
-This assumes interactive graph execution and node mutation are main-thread
-owned, an assumption reflected by existing Fabric asynchronous UI state but not
-stated as a Node API guarantee.
+**Remaining host work:** M-LSD keeps one mailbox per node instance. Delivery
+per nested Iterator occurrence needs Fabric's result scope and the frame
+admission change described below.
 
-**Potential Fabric API direction:** Provide a renderer- or graph-owned method
-such as `scheduleNodeInvalidation(_:)` that is safe from any thread and orders
-invalidation against the current pass's final `markClean()`. Alternatively,
-declare Node lifecycle and port publication `@MainActor` and provide an explicit
-nonisolated ingress for asynchronous results.
-
-## 3. GPU-dependent CPU analysis has no node scheduling protocol
+## 3. GPU-dependent CPU analysis can hold a Fabric frame slot
 
 **Observed constraint:** An image supplied to a node may be produced earlier in
 Fabric's still-uncommitted command buffer. Starting a separate command buffer
-for preprocessing can race those upstream writes, while waiting inside
-`execute()` would deadlock or serialize rendering. Fabric exposes the current
-command buffer but no standard continuation hook for CPU work that depends on
-its completion.
+for preprocessing can race those upstream writes. Fabric's
+`addCompletion(operation:receive:)` delivers asynchronous results in the
+original node or Iterator scope. On `c1da6639`, an unfinished operation
+occupies a frame slot until it completes. Once the slots fill, new frames
+wait for the oldest frame's outstanding work. [Fabric deferred delivery](https://github.com/Fabric-Project/Fabric/pull/442)
 
-Host source: `Fabric/Graph/GraphRenderer.swift`, especially its
-`execute(graph:executionInfo:renderPassDescriptor:commandBuffer:)` contract.
+**M-LSD behavior:** Preprocessing runs in the current Metal segment, which
+owns the Core Video texture and pixel buffer through GPU completion. A Metal
+callback starts Core ML on a serial queue outside Fabric's deferred frame
+batch. The node holds one active inference and at most one pending eligible
+image. The request retains its source image and preprocessing coordinates. A
+dropped segment can retry, a failure clears the outputs and reports a recoverable
+error, and disconnect or stop cancels publication while submitted work drains.
 
-**Local workaround:** M-LSD preprocessing is encoded onto Fabric's current
-command buffer. The package attaches a completion handler, moves Core ML work
-to its own serial queue, and returns from `execute()` immediately. The node
-allows one active inference and retains only the newest eligible pending image,
-preventing an unbounded frame backlog.
-
-**Potential Fabric API direction:** Define an asynchronous processor contract
-that can:
-
-1. Encode GPU preparation into the current pass.
-2. Start CPU/model work after that pass completes.
-3. Publish a result tagged with its source frame or generation.
-4. Request a later graph evaluation through Fabric-owned scheduling.
-5. Cancel or supersede obsolete pending work during stop, seek, or source
-   replacement.
-
-Fabric could then own ordering, lifetime, cancellation, diagnostics, and frame
-provenance instead of every plug-in rebuilding that state machine.
+**Acceptance for adopting scoped delivery:** Keep drawing while the model
+operation is delayed past `maxBuffersInFlight`. Publish each result to its
+original nested Iterator occurrence and drop results for removed occurrences.
+[M-LSD integration plan](internal/todos/MLSD_SATIN_INTEGRATION_PLAN.md)
 
 ## 4. Deterministic export cannot await asynchronous node results
 
@@ -360,15 +346,15 @@ the complete contract proposed above.
 | Gap | Existing issue coverage | Assessment and next action |
 | --- | --- | --- |
 | 1. Domain-specific plug-in value types | [#296 Node Typification II](https://github.com/Fabric-Project/Fabric/issues/296) | **Related, not equivalent.** It covers unbounded type declarations and typed/virtual UX, but not external registration of a stable, serializable plug-in value. Open a focused issue or explicitly expand #296 before treating this gap as tracked. |
-| 2. Thread-safe async invalidation | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247); closed [#336 async inference texture lifetime](https://github.com/Fabric-Project/Fabric/issues/336) | **Partial.** #247 is the right umbrella for async nodes, while #336 confirms a related resource-lifetime hazard. Neither defines a thread-safe graph-owned invalidation boundary ordered against `markClean()`. Propose that contract on #247. |
-| 3. GPU-dependent CPU analysis scheduling | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247); [#155 FabricImage frame-time metadata](https://github.com/Fabric-Project/Fabric/issues/155) | **Strong conceptual coverage.** #247 explicitly includes ML inference and GraphRenderer-controlled async/sync modes; #155 is useful for source-frame provenance. Add the GPU-completion continuation, cancellation, latest-pending, and frame-token requirements to #247. |
+| 2. Processor readiness and asynchronous scope | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247), [#442 deferred delivery](https://github.com/Fabric-Project/Fabric/pull/442) | `isDirty` plus a synchronized mailbox covers static input in ordinary subgraphs. Scoped delivery needs the frame admission condition in gap 3. |
+| 3. GPU-dependent CPU analysis scheduling | [#442 deferred delivery](https://github.com/Fabric-Project/Fabric/pull/442), [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247), [#155 FabricImage frame-time metadata](https://github.com/Fabric-Project/Fabric/issues/155) | #442 provides the GPU continuation and scope. Frame admission during model work and export settling remain open for M-LSD. |
 | 4. Deterministic export awaiting async work | [#247 Async Node Protocol / Graph Renderer support](https://github.com/Fabric-Project/Fabric/issues/247) | **Strong conceptual coverage, incomplete contract.** Its realtime/async versus offline/sync distinction is the right home, but it does not yet define an export settle barrier or affected-downstream reevaluation. Extend #247 rather than opening a duplicate. |
 | 5. Independent Processor cadence | None found | **Untracked.** Open a focused issue for future-frame/time/token evaluation requests that preserve Processor semantics and cancel with node lifecycle. |
 | 6. Supported plug-in build surface | [#308 SwiftPM embeds resources not needed for plugins](https://github.com/Fabric-Project/Fabric/issues/308) | **Partial.** Its proposed Fabric Plugin target addresses redundant resources, but not compiler-version artifacts, module-map layout, configuration matching, or a stable SDK/build helper. Expand #308 if one plug-in build epic is desired; otherwise open a narrower SDK/tooling issue linked to it. |
 | 7. Configurable canvas-node width | Closed [#110 Node title legibility](https://github.com/Fabric-Project/Fabric/issues/110); closed [#221 Layout issues](https://github.com/Fabric-Project/Fabric/issues/221) | **Adjacent only.** Neither supplies a plug-in preferred/minimum width or content-aware port-label layout contract. Open a focused editor/API issue. |
 | 8. Geometry Compose empty-array clearing | [#265 Line Geometry Node](https://github.com/Fabric-Project/Fabric/issues/265) is adjacent only | **Untracked.** #265 concerns generating thick line geometry, not clearing composed geometry. After reproducing the nonempty → empty transition live, open a focused Geometry Compose correctness issue with a transition test. |
 
-The most efficient upstream path is therefore to consolidate gaps 2–4 on
+Track asynchronous frame admission and export settling on
 [#247](https://github.com/Fabric-Project/Fabric/issues/247), add the missing
 plug-in build requirements to [#308](https://github.com/Fabric-Project/Fabric/issues/308),
 and file focused issues for gaps 5 and 7. Gap 8 should wait for the planned live
@@ -377,8 +363,8 @@ on whether plug-in-defined serialized values belong within that issue's scope.
 
 ## Proposal priorities
 
-The highest-value changes are thread-safe invalidation and deterministic async
-export because they affect correctness for every GPU-to-CPU analysis plug-in.
+Frame admission during inference and deterministic async export affect any
+GPU-to-CPU analysis plug-in that needs scoped results.
 Custom value registration would most improve plug-in ergonomics and preserve
 atomic domain contracts. A general cadence API is useful but can follow the
 core asynchronous scheduling contract. Configurable node width is a lower-risk

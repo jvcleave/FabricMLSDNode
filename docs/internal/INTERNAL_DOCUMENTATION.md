@@ -12,6 +12,9 @@ The [M-LSD Fabric and Satin integration plan](todos/MLSD_SATIN_INTEGRATION_PLAN.
 covers preprocessing lifetime, async result delivery, overlay buffer uploads,
 and the geometry example.
 
+The [integration handoff](handoffs/mlsd-satin-integration.md) records the
+completed checks against the workspace's Fabric and Satin pins.
+
 ## Model runbook
 
 The [model conversion runbook](runbooks/BUILDING_MODEL_VARIANTS.md) covers

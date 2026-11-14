@@ -2,6 +2,7 @@ import Fabric
 import Foundation
 import MLSDStructuralLineKit
 import Metal
+import MetalPerformanceShaders
 import Satin
 import simd
 
@@ -240,20 +241,31 @@ public final class MLSDStructuralLineOverlayNode: Node
         // A 1,000-segment array is 16 KB, beyond Metal's 4 KB inline-bytes limit.
         // Give each encoded draw its own buffer so subsequent graph passes cannot
         // overwrite data still being consumed by the GPU.
-        let segmentBuffer = try segments.withUnsafeBufferPointer { buffer in
-            guard let baseAddress = buffer.baseAddress,
-                  let segmentBuffer = self.context.device.makeBuffer(
-                      bytes: baseAddress,
-                      length: buffer.count * MemoryLayout<SIMD4<Float>>.stride,
-                      options: .storageModeShared
-                  )
-            else
-            {
-                throw Self.overlayError("Could not allocate the M-LSD line vertex buffer.")
-            }
-            return segmentBuffer
+        let byteCount = segments.count * MemoryLayout<SIMD4<Float>>.stride
+        let segmentBuffer: MTLBuffer
+        do
+        {
+            segmentBuffer = try self.context.gpuAllocator.makeBuffer(
+                length: byteCount, memoryClass: .cpuWrites, label: "M-LSD Line Segments"
+            )
         }
-        segmentBuffer.label = "M-LSD Line Segments"
+        catch
+        {
+            throw FabricError(.execution(.outOfMemory), severity: .recoverable,
+                              message: "Could not allocate the M-LSD line vertex buffer.",
+                              underlyingError: error)
+        }
+        segments.withUnsafeBufferPointer { buffer in
+            UnsafeMutableRawBufferPointer(start: segmentBuffer.contents(), count: byteCount)
+                .copyMemory(from: UnsafeRawBufferPointer(buffer))
+        }
+        let segment = (commandBuffer as? MPSCommandBuffer)?.rootCommandBuffer ?? commandBuffer
+        if !segment.retainedReferences
+        {
+            segment.addCompletedHandler { [segmentBuffer] _ in
+                withExtendedLifetime(segmentBuffer) {}
+            }
+        }
         let descriptor = MTLRenderPassDescriptor()
         descriptor.colorAttachments[0].texture = destination
         descriptor.colorAttachments[0].loadAction = .load

@@ -53,6 +53,8 @@ public final class MLSDStructuralLineAnalyzer
     /// Encodes texture preprocessing into a caller-owned command buffer, then
     /// performs Core ML prediction and decoding after its GPU work completes.
     /// The command buffer is neither committed nor waited on by this method.
+    /// A buffer discarded before submission reports `CancellationError` when
+    /// Metal invokes its handler as it releases the buffer.
     public func analyzeAfterCommandBufferCompletes(
         texture: MTLTexture,
         sourceSize: StructuralLineImageSize,
@@ -70,12 +72,22 @@ public final class MLSDStructuralLineAnalyzer
         )
         commandBuffer.addCompletedHandler
         { [backbone, decoder, predictionQueue] completedCommandBuffer in
-            guard completedCommandBuffer.status == .completed else
+            let status = completedCommandBuffer.status
+            guard status == .completed else
             {
-                let message = completedCommandBuffer.error?.localizedDescription
+                let error: any Error
+                switch status
+                {
+                    case .notEnqueued, .enqueued:
+                        error = CancellationError()
+                    default:
+                        error = MLSDStructuralLineError.gpuExecutionFailed(
+                            completedCommandBuffer.error?.localizedDescription
+                        )
+                }
                 predictionQueue.async
                 {
-                    completion(.failure(MLSDStructuralLineError.gpuExecutionFailed(message)))
+                    completion(.failure(error))
                 }
                 return
             }

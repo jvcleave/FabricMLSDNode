@@ -117,9 +117,12 @@ final class MLSDBackbone
         self.predictionLock.lock()
         defer { self.predictionLock.unlock() }
 
-        let input = try MLDictionaryFeatureProvider(dictionary: [
-            MLSDModelMetadata.inputName: MLFeatureValue(pixelBuffer: pixelBuffer),
-        ])
-        return try MLSDBackboneOutput(provider: self.model.prediction(from: input))
+        return try withExtendedLifetime(pixelBuffer)
+        {
+            let input = try MLDictionaryFeatureProvider(dictionary: [
+                MLSDModelMetadata.inputName: MLFeatureValue(pixelBuffer: pixelBuffer),
+            ])
+            return try MLSDBackboneOutput(provider: self.model.prediction(from: input))
+        }
     }
 }

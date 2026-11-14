@@ -164,9 +164,10 @@ for reproducible comparison.
 The node encodes orientation-aware preprocessing into Fabric's current command
 buffer, then performs Core ML inference asynchronously after GPU completion.
 It permits one active inference and retains only the newest eligible pending
-image. Outputs therefore represent the latest completed interactive analysis;
-Fabric currently has no same-frame asynchronous barrier for deterministic
-export. That limitation is detailed in the integration-gaps document above.
+image. Fabric's next graph evaluation publishes all five outlets for the same
+completed request, including in a subgraph with a static input. Disconnecting
+the image or stopping the graph clears those outlets. Deterministic same-frame
+export requires an asynchronous barrier in Fabric. [Fabric integration gaps](docs/FABRIC_INTEGRATION_GAPS.md)
 
 ## Overlay node contract
 
