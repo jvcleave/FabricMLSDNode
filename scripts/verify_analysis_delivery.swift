@@ -354,7 +354,8 @@ func testSavedScenes() throws
         let savedAnalysis = AnalysisPorts(node: try require(graph.nodes.first { type(of: $0) == analyzeClass }, "\(name) lost Analyze"))
         try expect(savedAnalysis.maxLines.value == 200, "\(name) lost its authored Max Lines value")
         let savedProvider = try require(graph.nodes.compactMap { $0 as? ImageProviderNode }.first, "\(name) lost Image Provider")
-        savedProvider.setFileURL(sourceURL)
+        try expect(savedProvider.inputFilePathParam.value == sourceURL.lastPathComponent,
+                   "\(name) must reference its adjacent JPEG using a relative path")
 
         let reopened = try decoder.decode(Graph.self, from: JSONEncoder().encode(graph))
         try expect(reopened.nodes.map(\.id) == graph.nodes.map(\.id)

@@ -463,7 +463,7 @@
 
                     ],
                     "defaultValue" : "",
-                    "value" : "file:\/\/\/Users\/jvcleave\/Documents\/WORK_IN_PROGRESS\/MAC_APPS\/FabricMLSDNode\/FabricScenes\/DubaiTestImage.jpg",
+                    "value" : "DubaiTestImage.jpg",
                     "label" : "File Path",
                     "description" : "Path to the image file to load",
                     "id" : "D1A3DF0A-8F57-4C08-B420-715B1E9C6805"

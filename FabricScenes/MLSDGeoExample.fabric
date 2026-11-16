@@ -269,7 +269,7 @@
 
                     ],
                     "id" : "116D4BC8-92DA-4443-BC5A-D1D8F0AD5532",
-                    "value" : "file:\/\/\/Volumes\/TEMP\/apple_video\/Dubai%20-%20DB_D001_C005.mov"
+                    "value" : ""
                   },
                   "type" : "string"
                 }
@@ -1234,7 +1234,7 @@
                   "base" : {
                     "controlType" : "filepicker",
                     "defaultValue" : "",
-                    "value" : "file:\/\/\/Users\/jvcleave\/Documents\/WORK_IN_PROGRESS\/MAC_APPS\/FabricMLSDNode\/FabricScenes\/DubaiTestImage.jpg",
+                    "value" : "DubaiTestImage.jpg",
                     "description" : "Path to the image file to load",
                     "options" : [
 
